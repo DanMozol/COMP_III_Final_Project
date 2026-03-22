@@ -1,5 +1,5 @@
 # Room Audio Monitor
-### COMP III Final Project — Dan Mozol
+### COMP III Final Project - Dan Mozol
 
 ---
 
