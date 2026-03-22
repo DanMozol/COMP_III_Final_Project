@@ -19,7 +19,7 @@ The sensor will capture two types of audio data every second:
 The overall loudness of the room measured in decibels (dBFS — decibels relative to full scale). This tells you how loud the room is at any given moment and over time. Use cases include noise monitoring, identifying loud events, and tracking average room noise levels throughout the day.
 
 **2. FFT Frequency Spectrum (64 bands)**
-A Fast Fourier Transform breaks the audio signal into 64 frequency bands spanning 20 Hz to 20,000 Hz — the full range of human hearing. This tells you *what kinds* of sounds are present, not just how loud things are. (20–200 Hz) capture bass and rumble. (200 Hz–4 kHz) capture mids (speech and music). (4–20 kHz) capture treble. This data powers the visual EQ display on the dashboard.
+A Fast Fourier Transform breaks the audio signal into 64 frequency bands spanning 20 Hz to 20,000 Hz - the full range of human hearing. This tells you *what kinds* of sounds are present, not just how loud things are. (20–200 Hz) capture bass and rumble. (200 Hz–4 kHz) capture mids (speech and music). (4–20 kHz) capture treble. This data powers the visual EQ display on the dashboard.
 
 Together these two data streams give a complete picture of the acoustic environment in real time.
 
@@ -42,7 +42,7 @@ The INMP441 is a digital I2S microphone — it connects directly to the ESP32 wi
 ### What will the end user see on the dashboard?
 
 **Live RTA Spectrum Analyzer**
-A real-time display of all 64 frequency bands rendered as vertical bars — identical in style to professional audio analysis software. Bars are color-coded and update continuously as sound changes in the room. 
+A real-time display of all 64 frequency bands rendered as vertical bars - identical in style to professional audio analysis software. Bars are color-coded and update continuously as sound changes in the room. 
 
 **dB Level Meter**
 A  vertical bar meter showing the current overall volume of the room
