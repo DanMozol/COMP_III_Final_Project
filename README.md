@@ -9,6 +9,14 @@
 
 A real-time room audio monitoring system that uses an ESP32 microcontroller and a digital microphone to continuously measure sound levels in a room. The data is sent over WiFi to a cloud-hosted API, stored in a database, and displayed on a live web dashboard featuring an audio spectrum analyzer.
 
+My main use case is for live audio production. I do a lot of work in churches mixing with audio consoles, being able to have a frequency analyzer helps me visualize what frequencies could be problematic when trying to make a clean and well balanced sound. Additionally, having a decimal meter lets me monitor how loud the room is to make sure I'm not in a dangerous range that could cause hearing damage after long periods.
+ 
+The suggestion about having multiple sensors actually made me think about a big benefit. Every room has acoustic dead spots and hot spots, places where certain frequencies build up (usually bass) and places where the sound is thin. Since I'm standing by the audio console 90% of the time, I only know what the room sounds like at that position. With 2–3 sensors I could place them:
+One at the front of the room (near the stage/speakers)
+One at the back of the room (where sound arrives last)
+ 
+Information like this could help me make better decisions on how to adjust levels and equalization to achieve a better sound for the people listening. Additionally, this gets into the realm of installing sound systems and testing if speakers are properly placed (avoiding phase cancellation and identifying any hotspots or dead spots)
+
 ---
 
 ### What data will be collected and why?
