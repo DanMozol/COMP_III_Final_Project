@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
 from typing import Optional
+from bson import ObjectId
 import datetime
 import os
 
@@ -24,7 +25,7 @@ app = FastAPI(title="Room Audio Monitor API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # tighten this when you deploy
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -32,13 +33,13 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 # Database
 # ---------------------------------------------------------------------------
-client     = AsyncIOMotorClient(MONGO_URI)
-db         = client[MONGO_DB]
-collection = db["readings"]
+client       = AsyncIOMotorClient(MONGO_URI)
+db           = client[MONGO_DB]
+collection   = db["readings"]
+sessions_col = db["sessions"]
 
 @app.on_event("startup")
 async def startup():
-    """Create MongoDB time-series collection and indexes on first run."""
     existing = await db.list_collection_names()
     if "readings" not in existing:
         await db.create_collection(
@@ -48,12 +49,12 @@ async def startup():
                 "metaField": "device_id",
                 "granularity": "seconds",
             },
-            expireAfterSeconds=60 * 60 * 24 * 30,  # auto-expire after 30 days
+            expireAfterSeconds=60 * 60 * 24 * 30,
         )
         print("Created time-series collection: readings")
 
-    # Compound index for efficient device + time range queries
     await collection.create_index([("device_id", 1), ("timestamp", -1)])
+    await sessions_col.create_index([("start_time", -1)])
 
 # ---------------------------------------------------------------------------
 # Auth
@@ -100,8 +101,11 @@ class AudioReading(BaseModel):
     db_level: float = Field(..., description="Overall dBFS level")
     bins: list[float] = Field(..., min_length=64, max_length=64, description="64 FFT frequency bands")
 
+class SessionCreate(BaseModel):
+    name: str
+
 # ---------------------------------------------------------------------------
-# Routes
+# Routes — data ingestion
 # ---------------------------------------------------------------------------
 
 @app.post("/data", summary="Ingest a reading from the ESP32")
@@ -185,16 +189,99 @@ async def get_stats(
         "window": window,
     }
 
+# ---------------------------------------------------------------------------
+# Routes — sessions
+# ---------------------------------------------------------------------------
+
+@app.post("/sessions", summary="Start a named session")
+async def start_session(session: SessionCreate, _: str = Depends(verify_token)):
+    doc = {
+        "name":       session.name,
+        "start_time": datetime.datetime.utcnow(),
+        "end_time":   None,
+    }
+    result = await sessions_col.insert_one(doc)
+    return {"id": str(result.inserted_id), "name": session.name}
+
+
+@app.put("/sessions/{session_id}/end", summary="End a session")
+async def end_session(session_id: str, _: str = Depends(verify_token)):
+    result = await sessions_col.update_one(
+        {"_id": ObjectId(session_id)},
+        {"$set": {"end_time": datetime.datetime.utcnow()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return {"status": "ok"}
+
+
+@app.get("/sessions", summary="List all sessions")
+async def list_sessions(_: str = Depends(verify_token)):
+    cursor = sessions_col.find({}).sort("start_time", -1)
+    sessions = await cursor.to_list(length=100)
+    for s in sessions:
+        s["id"] = str(s.pop("_id"))
+        s["start_time"] = s["start_time"].isoformat()
+        if s["end_time"]:
+            s["end_time"] = s["end_time"].isoformat()
+    return sessions
+
+
+@app.get("/sessions/{session_id}/average", summary="Averaged spectrum for a session")
+async def session_average(session_id: str, _: str = Depends(verify_token)):
+    session = await sessions_col.find_one({"_id": ObjectId(session_id)})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    end_time = session["end_time"] or datetime.datetime.utcnow()
+
+    cursor = collection.find(
+        {"timestamp": {"$gte": session["start_time"], "$lte": end_time}},
+        {"bins": 1, "db_level": 1, "_id": 0}
+    )
+    readings = await cursor.to_list(length=None)
+
+    if not readings:
+        return {
+            "id": session_id, "name": session["name"],
+            "count": 0, "avg_db": None, "avg_bins": None,
+            "start_time": session["start_time"].isoformat(),
+            "end_time": end_time.isoformat(),
+        }
+
+    n          = len(readings)
+    num_bands  = len(readings[0]["bins"])
+    avg_bins   = [0.0] * num_bands
+    avg_db     = 0.0
+
+    for r in readings:
+        avg_db += r["db_level"]
+        for i, v in enumerate(r["bins"]):
+            avg_bins[i] += v
+
+    avg_db  = round(avg_db / n, 2)
+    avg_bins = [round(v / n, 2) for v in avg_bins]
+
+    return {
+        "id":         session_id,
+        "name":       session["name"],
+        "start_time": session["start_time"].isoformat(),
+        "end_time":   end_time.isoformat(),
+        "count":      n,
+        "avg_db":     avg_db,
+        "avg_bins":   avg_bins,
+    }
+
+
+# ---------------------------------------------------------------------------
+# WebSocket
+# ---------------------------------------------------------------------------
 
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
-    """
-    Real-time push endpoint. No auth required (read-only, no sensitive writes).
-    The dashboard connects here and receives every new reading as JSON.
-    """
     await manager.connect(ws)
     try:
         while True:
-            await ws.receive_text()  # keep-alive ping from client
+            await ws.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(ws)

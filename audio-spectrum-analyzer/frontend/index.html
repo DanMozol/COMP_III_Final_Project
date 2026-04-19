@@ -3,546 +3,1095 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RTA 64 Bands</title>
+<title>RTA 64 — Pro Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
-    background: #111;
-    color: #ccc;
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
-    user-select: none;
-  }
+:root {
+  --bg0: #0e0e10;
+  --bg1: #141417;
+  --bg2: #1a1a1f;
+  --bg3: #202028;
+  --border: rgba(255,255,255,0.06);
+  --border-hi: rgba(255,255,255,0.13);
+  --gold: #f0a840;
+  --gold-dim: rgba(240,168,64,0.18);
+  --gold-glow: rgba(240,168,64,0.35);
+  --purple: #9a7fd4;
+  --purple-bright: #b899f0;
+  --purple-fill: rgba(150,110,220,0.72);
+  --purple-dark: rgba(90,60,160,0.55);
+  --purple-glow: rgba(150,110,220,0.15);
+  --cyan: #40d0e8;
+  --text-hi: #e8e6f0;
+  --text-mid: #9a98a8;
+  --text-lo: #52505c;
+  --red: #e05060;
+  --orange: #e08840;
+  --green: #50d890;
+  --grid: rgba(255,255,255,0.04);
+  --grid-hi: rgba(255,255,255,0.09);
+}
 
-  /* ── Header ── */
-  #header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 14px;
-    background: #1c1c1c;
-    border-bottom: 1px solid #2a2a2a;
-    flex-shrink: 0;
-  }
-  #header h1 { font-size: 14px; font-weight: bold; color: #e0e0e0; letter-spacing: .5px; }
-  .badge {
-    background: #2e2e2e;
-    border: 1px solid #444;
-    border-radius: 3px;
-    padding: 2px 7px;
-    font-size: 11px;
-    color: #aaa;
-    letter-spacing: .5px;
-  }
-  .badge.active { color: #d0d0d0; }
-  #header-right { margin-left: auto; color: #bbb; font-size: 13px; }
+body {
+  background: var(--bg0);
+  color: var(--text-mid);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
 
-  /* ── Main area (canvas + level meter) ── */
-  #display {
-    display: flex;
-    flex: 1;
-    min-height: 0;
-    padding: 10px 14px 0 14px;
-    gap: 10px;
-  }
-  #rta-canvas { flex: 1; display: block; }
-  #meter-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0;
-    width: 64px;
-    flex-shrink: 0;
-  }
-  #meter-label { font-size: 10px; color: #888; letter-spacing: 1px; margin-bottom: 4px; text-align: center; width: 100%; }
-  #meter-canvas { width: 36px; flex: 1; display: block; margin: 0 auto; }
-  #meter-db { font-size: 12px; color: #ccc; text-align: center; margin-top: 6px; }
+/* ── Titlebar ── */
+#titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 32px;
+  background: var(--bg1);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  padding: 0 12px;
+  position: relative;
+}
 
-  /* ── Freq axis ── */
-  #freq-axis {
-    display: flex;
-    padding: 2px 78px 4px 14px;
-    flex-shrink: 0;
-  }
-  #freq-canvas { flex: 1; display: block; height: 18px; }
+#logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 16px;
+}
 
-  /* ── Controls ── */
-  #controls {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    padding: 8px 14px;
-    background: #1c1c1c;
-    border-top: 1px solid #2a2a2a;
-    flex-shrink: 0;
-  }
-  label { color: #aaa; display: flex; align-items: center; gap: 6px; cursor: pointer; }
-  select {
-    background: #2a2a2a;
-    border: 1px solid #444;
-    color: #ccc;
-    border-radius: 4px;
-    padding: 3px 24px 3px 8px;
-    font-family: inherit;
-    font-size: 13px;
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-  }
-  input[type=range] {
-    -webkit-appearance: none;
-    width: 120px;
-    height: 4px;
-    background: #3a3a3a;
-    border-radius: 2px;
-    outline: none;
-    cursor: pointer;
-  }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 14px; height: 14px;
-    border-radius: 50%;
-    background: #777;
-    cursor: pointer;
-  }
-  input[type=checkbox] { accent-color: #7a7aff; width: 14px; height: 14px; cursor: pointer; }
-  #decay-val { min-width: 16px; color: #ccc; }
-  #status {
-    margin-left: auto;
-    font-size: 11px;
-    color: #555;
-    letter-spacing: .3px;
-  }
-  #status.connected { color: #5a5; }
+#logo-mark {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+#logo-mark span {
+  display: block;
+  width: 3px;
+  border-radius: 1px;
+  background: var(--purple-bright);
+}
+#logo-mark span:nth-child(1) { height: 8px; }
+#logo-mark span:nth-child(2) { height: 12px; }
+#logo-mark span:nth-child(3) { height: 6px; }
+#logo-mark span:nth-child(4) { height: 10px; }
+
+#logo-text {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-hi);
+  letter-spacing: 1px;
+}
+
+#logo-sub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--purple);
+  letter-spacing: 1px;
+}
+
+#tabs {
+  display: flex;
+  gap: 1px;
+  height: 100%;
+  align-items: stretch;
+  margin-right: auto;
+}
+
+.tab {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .8px;
+  color: var(--text-lo);
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.tab:hover { color: var(--text-mid); }
+.tab.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+#readout {
+  font-size: 11px;
+  color: var(--text-mid);
+  letter-spacing: .3px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+#freq-read { color: var(--gold); font-weight: 500; min-width: 64px; text-align: right; }
+#db-read   { color: var(--text-hi); font-weight: 500; min-width: 54px; text-align: right; }
+.read-sep  { color: var(--text-lo); }
+
+/* ── Sub-header ── */
+#subheader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 24px;
+  padding: 0 12px;
+  background: var(--bg1);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.chip {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 2px;
+  border: 1px solid var(--border-hi);
+  color: var(--text-lo);
+  background: var(--bg2);
+}
+.chip.lit { color: var(--gold); border-color: rgba(240,168,64,0.3); background: rgba(240,168,64,0.07); }
+.chip.connected-chip { color: var(--green); border-color: rgba(80,216,144,0.3); background: rgba(80,216,144,0.07); }
+.chip.session-chip { color: var(--purple-bright); border-color: rgba(184,153,240,0.3); background: rgba(154,127,212,0.07); }
+#fps-chip { margin-left: auto; }
+
+/* ── Spectrum view ── */
+#spectrum-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+#display {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+#rta-canvas { flex: 1; display: block; }
+
+#meter-sidebar {
+  width: 52px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg1);
+  border-left: 1px solid var(--border);
+  padding: 8px 0 4px 0;
+  align-items: center;
+}
+
+#meter-label-top { font-size: 8px; letter-spacing: 1.5px; color: var(--text-lo); text-transform: uppercase; margin-bottom: 6px; }
+#meter-canvas { width: 18px; flex: 1; display: block; }
+#meter-db { font-size: 10px; color: var(--text-mid); margin-top: 6px; font-weight: 500; letter-spacing: .3px; }
+
+#freq-row {
+  display: flex;
+  height: 20px;
+  padding: 0 52px 0 36px;
+  flex-shrink: 0;
+  background: var(--bg1);
+  border-top: 1px solid var(--border);
+}
+#freq-canvas { flex: 1; display: block; }
+
+/* ── History panel ── */
+#history-panel {
+  display: none;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+#history-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--bg1);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+#history-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .8px;
+  color: var(--text-hi);
+}
+
+#refresh-btn {
+  margin-left: auto;
+  background: var(--bg2);
+  border: 1px solid var(--border-hi);
+  border-radius: 3px;
+  color: var(--text-mid);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+#refresh-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+#history-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#history-list::-webkit-scrollbar { width: 4px; }
+#history-list::-webkit-scrollbar-track { background: transparent; }
+#history-list::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 2px; }
+
+#history-empty {
+  color: var(--text-lo);
+  font-size: 11px;
+  letter-spacing: .5px;
+  text-align: center;
+  margin-top: 40px;
+}
+
+.session-card {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: border-color .2s;
+}
+.session-card:hover { border-color: var(--border-hi); }
+
+.card-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 14px 8px;
+}
+
+.card-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  color: var(--text-hi);
+}
+
+.card-meta {
+  font-size: 9px;
+  letter-spacing: .4px;
+  color: var(--text-lo);
+  margin-left: auto;
+}
+
+.card-stats {
+  display: flex;
+  gap: 16px;
+  padding: 6px 14px 10px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stat-label { font-size: 8px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-lo); }
+.stat-value { font-size: 11px; color: var(--gold); font-weight: 500; }
+
+.mini-spectrum {
+  display: block;
+  width: 100%;
+  height: 56px;
+  margin: 0;
+}
+
+/* ── Controls bar ── */
+#controls {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 42px;
+  background: var(--bg1);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  padding: 0 12px;
+}
+
+.ctrl-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  height: 100%;
+  border-right: 1px solid var(--border);
+}
+.ctrl-group:first-child { padding-left: 0; }
+.ctrl-group.ml-auto { margin-left: auto; border-right: none; }
+
+.ctrl-label {
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-lo);
+}
+
+.pro-select {
+  background: var(--bg2);
+  border: 1px solid var(--border-hi);
+  border-radius: 3px;
+  color: var(--text-hi);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 3px 22px 3px 8px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23666'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  transition: border-color .15s;
+}
+.pro-select:focus { outline: none; border-color: var(--gold); }
+
+.pro-range {
+  -webkit-appearance: none;
+  width: 90px;
+  height: 2px;
+  background: var(--bg3);
+  border-radius: 1px;
+  outline: none;
+  cursor: pointer;
+}
+.pro-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer;
+  box-shadow: 0 0 0 2px rgba(240,168,64,0.2);
+}
+.pro-range-val { font-size: 10px; color: var(--gold); min-width: 14px; }
+
+.pro-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--text-mid);
+  font-size: 10px;
+}
+.pro-toggle input { display: none; }
+.pro-toggle-track {
+  width: 26px; height: 13px;
+  background: var(--bg3);
+  border: 1px solid var(--border-hi);
+  border-radius: 7px;
+  position: relative;
+  transition: background .15s, border-color .15s;
+}
+.pro-toggle input:checked + .pro-toggle-track {
+  background: var(--gold-dim);
+  border-color: rgba(240,168,64,0.4);
+}
+.pro-toggle-thumb {
+  position: absolute;
+  top: 1px; left: 1px;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--text-lo);
+  transition: transform .15s, background .15s;
+}
+.pro-toggle input:checked + .pro-toggle-track + .pro-toggle-thumb {
+  transform: translateX(13px);
+  background: var(--gold);
+}
+
+/* Session input + button */
+.pro-input {
+  background: var(--bg2);
+  border: 1px solid var(--border-hi);
+  border-radius: 3px;
+  color: var(--text-hi);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 3px 8px;
+  width: 130px;
+  outline: none;
+  transition: border-color .15s;
+}
+.pro-input::placeholder { color: var(--text-lo); }
+.pro-input:focus { border-color: var(--purple); }
+.pro-input:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.pro-btn {
+  background: var(--bg2);
+  border: 1px solid var(--border-hi);
+  border-radius: 3px;
+  color: var(--text-mid);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.pro-btn:hover { border-color: var(--purple); color: var(--purple-bright); }
+.pro-btn.recording {
+  background: rgba(224,80,96,0.12);
+  border-color: rgba(224,80,96,0.4);
+  color: var(--red);
+}
+
+#status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text-lo); flex-shrink: 0; }
+#status-dot.on { background: var(--green); box-shadow: 0 0 5px rgba(80,216,144,0.6); }
+#status-text { font-size: 9px; letter-spacing: .5px; color: var(--text-lo); }
+#status-text.on { color: var(--green); }
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<div id="header">
-  <h1>RTA 64 Bands</h1>
-  <span class="badge active" id="mode-badge">PEAK</span>
-  <span class="badge">SR: 44100 Hz</span>
-  <span class="badge">Cal: 0.0 dB</span>
-  <span class="badge" id="fps-badge">FPS: —</span>
-  <span id="header-right">— Hz &nbsp;— dB fs</span>
-</div>
+<!-- Titlebar -->
+<div id="titlebar">
+  <div id="logo">
+    <div id="logo-mark">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <div>
+      <span id="logo-text">RTA</span>
+      <span id="logo-sub">&nbsp;Pro·64</span>
+    </div>
+  </div>
 
-<!-- Spectrum + level meter -->
-<div id="display">
-  <canvas id="rta-canvas"></canvas>
-  <div id="meter-wrap">
-    <div id="meter-label">LEVEL</div>
-    <canvas id="meter-canvas" width="36"></canvas>
-    <div id="meter-db">— dB</div>
+  <div id="tabs">
+    <div class="tab active" data-tab="spectrum">Spectrum</div>
+    <div class="tab" data-tab="history">History</div>
+  </div>
+
+  <div id="readout">
+    <span id="freq-read">— Hz</span>
+    <span class="read-sep">/</span>
+    <span id="db-read">— dBfs</span>
   </div>
 </div>
 
-<!-- Frequency axis -->
-<div id="freq-axis">
-  <canvas id="freq-canvas"></canvas>
+<!-- Sub-header -->
+<div id="subheader">
+  <div class="chip lit" id="mode-chip">PEAK</div>
+  <div class="chip">64 BANDS</div>
+  <div class="chip">SR 44100 Hz</div>
+  <div class="chip" id="session-chip" style="display:none"></div>
+  <div class="chip" id="fps-chip">—</div>
+  <div id="status-dot"></div>
+  <span id="status-text">SIMULATED</span>
+</div>
+
+<!-- Spectrum view -->
+<div id="spectrum-view">
+  <div id="display">
+    <canvas id="rta-canvas"></canvas>
+    <div id="meter-sidebar">
+      <div id="meter-label-top">LVL</div>
+      <canvas id="meter-canvas" width="18"></canvas>
+      <div id="meter-db">—</div>
+    </div>
+  </div>
+  <div id="freq-row">
+    <canvas id="freq-canvas"></canvas>
+  </div>
+</div>
+
+<!-- History panel -->
+<div id="history-panel">
+  <div id="history-toolbar">
+    <span id="history-title">Session History</span>
+    <button id="refresh-btn">Refresh</button>
+  </div>
+  <div id="history-list">
+    <div id="history-empty">No sessions yet — start one from the controls below.</div>
+  </div>
 </div>
 
 <!-- Controls -->
 <div id="controls">
-  <label>Mode:
-    <select id="sim-mode">
-      <option value="room">Room noise</option>
-      <option value="pink">Pink noise</option>
-      <option value="white">White noise</option>
-      <option value="sine">Sine sweep</option>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Source</span>
+    <select class="pro-select" id="sim-mode">
+      <option value="room">Room</option>
+      <option value="pink">Pink</option>
+      <option value="white">White</option>
+      <option value="sine">Sweep</option>
     </select>
-  </label>
-  <label>Decay
-    <input type="range" id="decay" min="1" max="20" value="8">
-    <span id="decay-val">8</span>
-  </label>
-  <label><input type="checkbox" id="peak-hold" checked> Peak hold</label>
-  <label><input type="checkbox" id="show-avg"> Show avg</label>
-  <span id="status">Simulated · replace with ESP32 WebSocket</span>
+  </div>
+
+  <div class="ctrl-group">
+    <span class="ctrl-label">Decay</span>
+    <input type="range" class="pro-range" id="decay" min="1" max="20" value="8">
+    <span class="pro-range-val" id="decay-val">8</span>
+  </div>
+
+  <div class="ctrl-group">
+    <label class="pro-toggle">
+      <input type="checkbox" id="peak-hold" checked>
+      <div class="pro-toggle-track"></div>
+      <div class="pro-toggle-thumb"></div>
+      Peak hold
+    </label>
+  </div>
+
+  <div class="ctrl-group">
+    <label class="pro-toggle">
+      <input type="checkbox" id="show-avg">
+      <div class="pro-toggle-track"></div>
+      <div class="pro-toggle-thumb"></div>
+      Avg curve
+    </label>
+  </div>
+
+  <div class="ctrl-group">
+    <label class="pro-toggle">
+      <input type="checkbox" id="show-fill" checked>
+      <div class="pro-toggle-track"></div>
+      <div class="pro-toggle-thumb"></div>
+      Fill
+    </label>
+  </div>
+
+  <div class="ctrl-group">
+    <span class="ctrl-label">Session</span>
+    <input type="text" class="pro-input" id="session-name" placeholder="Name this session...">
+    <button class="pro-btn" id="session-btn">Start</button>
+  </div>
+
+  <div class="ctrl-group ml-auto">
+    <div id="status-dot-ctrl" style="width:5px;height:5px;border-radius:50%;background:var(--text-lo)"></div>
+    <span id="status-text-ctrl" style="font-size:9px;letter-spacing:.5px;color:var(--text-lo)">ESP32</span>
+  </div>
 </div>
 
 <script>
-// ── Constants ──────────────────────────────────────────────────────────────
-const NUM_BANDS   = 64;
-const DB_MIN      = -84;
-const DB_MAX      =   0;
-const DB_RANGE    = DB_MAX - DB_MIN;
-const BAR_COLOR   = '#8a6fc8';
-const BAR_DARK    = '#6a4fa8';
-const PEAK_COLOR  = '#e0e0e0';
-const AVG_COLOR   = 'rgba(200,180,255,0.55)';
-const GRID_COLOR  = 'rgba(255,255,255,0.05)';
-const TEXT_COLOR  = '#666';
-const WS_URL      = 'ws://localhost:8000/ws';
+// ─── Config ───────────────────────────────────────────────────────────────────
+const BASE_URL  = 'http://localhost:8000';
+const API_TOKEN = 'DanMozolIsSuperCool!13';
+const WS_URL    = 'ws://localhost:8000/ws';
 
-// ── State ──────────────────────────────────────────────────────────────────
-let bins     = new Float32Array(NUM_BANDS).fill(DB_MIN);
-let peaks    = new Float32Array(NUM_BANDS).fill(DB_MIN);
-let avgs     = new Float32Array(NUM_BANDS).fill(DB_MIN);
-let peakAge  = new Uint16Array(NUM_BANDS);
-let dbLevel  = DB_MIN;
+function apiHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_TOKEN}` };
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+const NUM_BANDS = 64;
+const DB_MIN    = -84;
+const DB_MAX    = 0;
+const DB_RANGE  = DB_MAX - DB_MIN;
+const F_MIN     = 20;
+const F_MAX     = 20000;
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let bins      = new Float32Array(NUM_BANDS).fill(DB_MIN);
+let peaks     = new Float32Array(NUM_BANDS).fill(DB_MIN);
+let avgs      = new Float32Array(NUM_BANDS).fill(DB_MIN);
+let peakAge   = new Uint16Array(NUM_BANDS);
+let dbLevel   = DB_MIN;
 let meterPeak = DB_MIN;
 let meterAge  = 0;
 let hoverBand = -1;
-let hoverFreq = 0;
-let frameCount = 0, fps = 0, lastFpsTime = performance.now();
 let simPhase  = 0;
+let frameCount = 0, fps = 0, lastFpsTime = performance.now();
 let connected = false;
+let activeSession = null;
+const AVG_ALPHA = 0.12;
 
-// ── Settings ───────────────────────────────────────────────────────────────
+// ─── Settings ─────────────────────────────────────────────────────────────────
 const s = {
   get decay()    { return +document.getElementById('decay').value; },
   get peakHold() { return document.getElementById('peak-hold').checked; },
   get showAvg()  { return document.getElementById('show-avg').checked; },
+  get showFill() { return document.getElementById('show-fill').checked; },
   get simMode()  { return document.getElementById('sim-mode').value; },
 };
 
-// ── Canvas setup ───────────────────────────────────────────────────────────
-const rtaCanvas  = document.getElementById('rta-canvas');
+// ─── Canvases ─────────────────────────────────────────────────────────────────
+const rtaCanvas   = document.getElementById('rta-canvas');
 const meterCanvas = document.getElementById('meter-canvas');
 const freqCanvas  = document.getElementById('freq-canvas');
-const rtaCtx     = rtaCanvas.getContext('2d');
-const meterCtx   = meterCanvas.getContext('2d');
-const freqCtx    = freqCanvas.getContext('2d');
+const rtaCtx      = rtaCanvas.getContext('2d');
+const meterCtx    = meterCanvas.getContext('2d');
+const freqCtx     = freqCanvas.getContext('2d');
+
+function scaleCanvas(canvas, w, h) {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width  = w + 'px';
+  canvas.style.height = h + 'px';
+  canvas.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+}
 
 function resize() {
-  const displayEl = document.getElementById('display');
-  const meterWrap = document.getElementById('meter-wrap');
-
-  rtaCanvas.width  = rtaCanvas.offsetWidth;
-  rtaCanvas.height = rtaCanvas.offsetHeight;
-
-  meterCanvas.height = meterCanvas.offsetHeight;
-
-  freqCanvas.width  = freqCanvas.offsetWidth;
-  freqCanvas.height = freqCanvas.offsetHeight;
-
+  scaleCanvas(rtaCanvas,   rtaCanvas.offsetWidth,   rtaCanvas.offsetHeight);
+  scaleCanvas(meterCanvas, meterCanvas.offsetWidth,  meterCanvas.offsetHeight);
+  scaleCanvas(freqCanvas,  freqCanvas.offsetWidth,   freqCanvas.offsetHeight);
   drawFreqAxis();
 }
-
 window.addEventListener('resize', resize);
+new ResizeObserver(resize).observe(document.body);
 
-// ── Frequency helpers ──────────────────────────────────────────────────────
-const F_MIN = 20, F_MAX = 20000;
+// ─── Freq helpers ─────────────────────────────────────────────────────────────
+function bandFreq(b)       { return F_MIN * Math.pow(F_MAX / F_MIN, b / NUM_BANDS); }
+function bandCenterFreq(b) { return F_MIN * Math.pow(F_MAX / F_MIN, (b + 0.5) / NUM_BANDS); }
+function freqToX(f, w)     { return (Math.log10(f / F_MIN) / Math.log10(F_MAX / F_MIN)) * w; }
+function freqLabel(f)      { return f >= 1000 ? (f/1000|0) + 'k' : Math.round(f).toString(); }
 
-function bandFreq(b) {
-  return F_MIN * Math.pow(F_MAX / F_MIN, b / NUM_BANDS);
-}
-function bandCenterFreq(b) {
-  return F_MIN * Math.pow(F_MAX / F_MIN, (b + 0.5) / NUM_BANDS);
-}
-function freqLabel(f) {
-  if (f >= 1000) return (f / 1000).toFixed(f >= 10000 ? 0 : 0) + 'k';
-  return Math.round(f).toString();
-}
-
-// ── Frequency axis ─────────────────────────────────────────────────────────
 const FREQ_LABELS = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
 
-function freqToX(f, w) {
-  return (Math.log10(f / F_MIN) / Math.log10(F_MAX / F_MIN)) * w;
-}
-
 function drawFreqAxis() {
-  const w = freqCanvas.width, h = freqCanvas.height;
+  const w = freqCanvas.offsetWidth, h = freqCanvas.offsetHeight;
   freqCtx.clearRect(0, 0, w, h);
-  freqCtx.fillStyle = TEXT_COLOR;
-  freqCtx.font = '10px Courier New';
-  freqCtx.textAlign = 'center';
+  freqCtx.font = '9px DM Mono';
   for (const f of FREQ_LABELS) {
     const x = freqToX(f, w);
-    freqCtx.fillText(freqLabel(f), x, 12);
+    // align left for 20 Hz so it isn't clipped, right for 20kHz
+    freqCtx.textAlign = f === 20 ? 'left' : f === 20000 ? 'right' : 'center';
+    freqCtx.fillStyle = 'rgba(255,255,255,0.08)';
+    freqCtx.fillRect(x - 0.5, 0, 1, 4);
+    freqCtx.fillStyle = '#52505c';
+    freqCtx.fillText(freqLabel(f), x, h - 2);
   }
 }
 
-// ── Draw RTA ───────────────────────────────────────────────────────────────
-const DB_GRID = [0, -12, -24, -36, -48, -60, -72, -84];
-
-function dbToY(db, h) {
-  return h * (1 - (db - DB_MIN) / DB_RANGE);
-}
+// ─── RTA draw ─────────────────────────────────────────────────────────────────
+const DB_GRID    = [0, -6, -12, -18, -24, -36, -48, -60, -72, -84];
+const DB_GRID_HI = new Set([0, -12, -24, -36, -48]);
+function dbToY(db, h) { return h * (1 - (db - DB_MIN) / DB_RANGE); }
 
 function drawRTA() {
-  const w = rtaCanvas.width, h = rtaCanvas.height;
+  const w = rtaCanvas.offsetWidth, h = rtaCanvas.offsetHeight;
   rtaCtx.clearRect(0, 0, w, h);
 
-  // Grid lines + dB labels
-  rtaCtx.font = '10px Courier New';
-  rtaCtx.textAlign = 'right';
-  for (const db of DB_GRID) {
-    const y = dbToY(db, h);
-    rtaCtx.strokeStyle = GRID_COLOR;
+  for (const f of FREQ_LABELS) {
+    const x = freqToX(f, w);
+    rtaCtx.strokeStyle = 'rgba(255,255,255,0.03)';
     rtaCtx.lineWidth = 1;
+    rtaCtx.beginPath(); rtaCtx.moveTo(x, 0); rtaCtx.lineTo(x, h); rtaCtx.stroke();
+  }
+
+  for (const db of DB_GRID) {
+    const y  = Math.round(dbToY(db, h)) + 0.5;
+    const hi = DB_GRID_HI.has(db);
+    rtaCtx.strokeStyle = hi ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.03)';
+    rtaCtx.lineWidth = 1;
+    rtaCtx.beginPath(); rtaCtx.moveTo(0, y); rtaCtx.lineTo(w, y); rtaCtx.stroke();
+    rtaCtx.font = '9px DM Mono';
+    rtaCtx.textAlign = 'left';
+    rtaCtx.fillStyle = hi ? '#52505c' : '#38363f';
+    if (db < DB_MAX) rtaCtx.fillText(db, 4, y - 2);
+  }
+
+  const bandX     = b => freqToX(bandFreq(b),       w);
+  const bandCX    = b => freqToX(bandCenterFreq(b), w);
+  const bandRight = b => freqToX(bandFreq(b + 1),   w);
+  const GAP_PX    = 0.8;
+
+  if (s.showFill) {
     rtaCtx.beginPath();
-    rtaCtx.moveTo(0, y); rtaCtx.lineTo(w, y);
-    rtaCtx.stroke();
-    if (db > DB_MIN) {
-      rtaCtx.fillStyle = TEXT_COLOR;
-      rtaCtx.fillText(db, w - 4, y - 2);
+    for (let b = 0; b < NUM_BANDS; b++) {
+      const cx = bandCX(b), y = dbToY(bins[b], h);
+      b === 0 ? rtaCtx.moveTo(cx, y) : rtaCtx.lineTo(cx, y);
+    }
+    rtaCtx.lineTo(w, h); rtaCtx.lineTo(0, h); rtaCtx.closePath();
+    const fillGrad = rtaCtx.createLinearGradient(0, 0, 0, h);
+    fillGrad.addColorStop(0,    'rgba(160,110,240,0.82)');
+    fillGrad.addColorStop(0.35, 'rgba(130,80,210,0.60)');
+    fillGrad.addColorStop(0.75, 'rgba(90,50,170,0.35)');
+    fillGrad.addColorStop(1,    'rgba(60,30,130,0.10)');
+    rtaCtx.fillStyle = fillGrad;
+    rtaCtx.fill();
+
+    rtaCtx.beginPath();
+    for (let b = 0; b < NUM_BANDS; b++) {
+      const cx = bandCX(b), y = dbToY(bins[b], h);
+      b === 0 ? rtaCtx.moveTo(cx, y) : rtaCtx.lineTo(cx, y);
+    }
+    rtaCtx.strokeStyle = 'rgba(190,145,255,0.90)';
+    rtaCtx.lineWidth = 1.5; rtaCtx.lineJoin = 'round'; rtaCtx.stroke();
+  } else {
+    for (let b = 0; b < NUM_BANDS; b++) {
+      const x = bandX(b) + GAP_PX, bw = Math.max(1, bandRight(b) - bandX(b) - GAP_PX * 2);
+      const yTop = dbToY(bins[b], h);
+      const grad = rtaCtx.createLinearGradient(0, yTop, 0, h);
+      grad.addColorStop(0, 'rgba(180,130,255,0.85)');
+      grad.addColorStop(1, 'rgba(80,50,160,0.30)');
+      rtaCtx.fillStyle = grad;
+      rtaCtx.fillRect(x, yTop, bw, h - yTop);
     }
   }
 
-  const barW   = w / NUM_BANDS;
-  const gap    = Math.max(1, barW * 0.08);
-
-  // Average curve (filled area)
   if (s.showAvg) {
     rtaCtx.beginPath();
     for (let b = 0; b < NUM_BANDS; b++) {
-      const x = b * barW + barW / 2;
-      const y = dbToY(avgs[b], h);
-      if (b === 0) rtaCtx.moveTo(x, y); else rtaCtx.lineTo(x, y);
+      const cx = bandCX(b), y = dbToY(avgs[b], h);
+      b === 0 ? rtaCtx.moveTo(cx, y) : rtaCtx.lineTo(cx, y);
     }
-    rtaCtx.strokeStyle = AVG_COLOR;
-    rtaCtx.lineWidth = 1.5;
-    rtaCtx.stroke();
+    rtaCtx.strokeStyle = 'rgba(255,255,255,0.92)';
+    rtaCtx.lineWidth = 2.5; rtaCtx.lineJoin = 'round'; rtaCtx.stroke();
   }
 
-  // Bars
-  for (let b = 0; b < NUM_BANDS; b++) {
-    const x    = b * barW + gap / 2;
-    const bw   = barW - gap;
-    const yTop = dbToY(bins[b], h);
-    const yBot = h;
-
-    // Gradient per bar
-    const grad = rtaCtx.createLinearGradient(0, yTop, 0, yBot);
-    grad.addColorStop(0, BAR_COLOR);
-    grad.addColorStop(1, BAR_DARK);
-    rtaCtx.fillStyle = grad;
-    rtaCtx.fillRect(x, yTop, bw, yBot - yTop);
-
-    // Peak hold line
-    if (s.peakHold && peaks[b] > DB_MIN + 1) {
-      const yPeak = dbToY(peaks[b], h);
-      rtaCtx.fillStyle = PEAK_COLOR;
-      rtaCtx.fillRect(x, yPeak - 1, bw, 2);
+  if (s.peakHold) {
+    for (let b = 0; b < NUM_BANDS; b++) {
+      if (peaks[b] <= DB_MIN + 1) continue;
+      const cx = bandCX(b), bw = Math.max(1, bandRight(b) - bandX(b) - GAP_PX * 2);
+      const yPk = dbToY(peaks[b], h);
+      const alpha = peakAge[b] < 30 ? 1 : Math.max(0, 1 - (peakAge[b] - 30) / 60);
+      rtaCtx.fillStyle = `rgba(240,168,64,${alpha * 0.9})`;
+      rtaCtx.fillRect(cx - bw / 2, yPk - 1, bw, 2);
     }
   }
 
-  // Hover crosshair
   if (hoverBand >= 0) {
-    const x = hoverBand * barW;
-    rtaCtx.strokeStyle = 'rgba(255,255,255,0.15)';
-    rtaCtx.lineWidth = barW;
-    rtaCtx.beginPath();
-    rtaCtx.moveTo(x + barW / 2, 0); rtaCtx.lineTo(x + barW / 2, h);
-    rtaCtx.stroke();
+    const cx = bandCX(hoverBand), hbw = Math.max(2, bandRight(hoverBand) - bandX(hoverBand));
+    const db = bins[hoverBand], yCurve = dbToY(db, h);
+    rtaCtx.strokeStyle = 'rgba(240,168,64,0.12)';
+    rtaCtx.lineWidth = hbw;
+    rtaCtx.beginPath(); rtaCtx.moveTo(cx, 0); rtaCtx.lineTo(cx, h); rtaCtx.stroke();
+    rtaCtx.strokeStyle = 'rgba(240,168,64,0.22)';
+    rtaCtx.lineWidth = 1; rtaCtx.setLineDash([3, 4]);
+    rtaCtx.beginPath(); rtaCtx.moveTo(0, yCurve); rtaCtx.lineTo(w, yCurve); rtaCtx.stroke();
+    rtaCtx.setLineDash([]);
+    rtaCtx.beginPath(); rtaCtx.arc(cx, yCurve, 4, 0, Math.PI * 2);
+    rtaCtx.fillStyle = '#f0a840'; rtaCtx.fill();
+    rtaCtx.strokeStyle = '#1a1208'; rtaCtx.lineWidth = 1.5; rtaCtx.stroke();
+
+    const TAG_H = 30, TAG_GAP = 10;
+    let tagBottom = yCurve - TAG_GAP, tagTop = tagBottom - TAG_H;
+    if (tagTop < 2) { tagTop = 2; tagBottom = tagTop + TAG_H; }
+    rtaCtx.strokeStyle = 'rgba(240,168,64,0.55)'; rtaCtx.lineWidth = 1;
+    rtaCtx.beginPath(); rtaCtx.moveTo(cx, yCurve - 4); rtaCtx.lineTo(cx, tagBottom); rtaCtx.stroke();
+
+    const freq = bandCenterFreq(hoverBand);
+    const fStr = freq < 1000 ? Math.round(freq) + ' Hz' : (freq / 1000).toFixed(1) + ' kHz';
+    const dbStr = db.toFixed(1) + ' dB';
+    rtaCtx.font = 'bold 9px DM Mono';
+    const fw = Math.max(rtaCtx.measureText(fStr).width, rtaCtx.measureText(dbStr).width);
+    const tw = fw + 14;
+    let lx = Math.max(2, Math.min(w - tw - 2, cx - tw / 2));
+    rtaCtx.fillStyle = '#f0a840';
+    rtaCtx.beginPath(); rtaCtx.roundRect(lx, tagTop, tw, TAG_H, 3); rtaCtx.fill();
+    rtaCtx.fillStyle = '#1a1208'; rtaCtx.textAlign = 'center'; rtaCtx.font = 'bold 9px DM Mono';
+    rtaCtx.fillText(fStr, lx + tw / 2, tagTop + 11);
+    rtaCtx.font = '9px DM Mono';
+    rtaCtx.fillText(dbStr, lx + tw / 2, tagTop + 23);
   }
 }
 
-// ── Draw level meter ───────────────────────────────────────────────────────
+// ─── Level meter ──────────────────────────────────────────────────────────────
 function drawMeter() {
-  const w = meterCanvas.width, h = meterCanvas.height;
+  const w = meterCanvas.offsetWidth, h = meterCanvas.offsetHeight;
   meterCtx.clearRect(0, 0, w, h);
-
-  const segH = 4, segGap = 2, segTotal = segH + segGap;
+  const segH = 3, segGap = 1, segTotal = segH + segGap;
   const numSegs = Math.floor(h / segTotal);
-
   for (let i = 0; i < numSegs; i++) {
     const db = DB_MAX - (i / numSegs) * DB_RANGE;
     const active = db <= dbLevel;
-    const isPeak = Math.abs(db - meterPeak) < (DB_RANGE / numSegs) * 1.5;
-
+    const isPeak = s.peakHold && Math.abs(db - meterPeak) < (DB_RANGE / numSegs) * 2;
     let color;
-    if (isPeak && s.peakHold) {
-      color = '#e05060';
-    } else if (active) {
-      if (db > -12) color = '#e05060';
-      else if (db > -24) color = '#c08040';
-      else color = BAR_COLOR;
-    } else {
-      color = '#2a2a2a';
-    }
-
+    if (isPeak)       color = '#f0a840';
+    else if (active)  color = db > -6 ? '#e05060' : db > -18 ? '#e08840' : db > -36 ? '#9a7fd4' : '#6a50a4';
+    else              color = '#1e1e26';
     meterCtx.fillStyle = color;
     meterCtx.fillRect(0, i * segTotal, w, segH);
   }
 }
 
-// ── Simulation ─────────────────────────────────────────────────────────────
+// ─── Simulation ───────────────────────────────────────────────────────────────
 function generateSim() {
   const out = new Float32Array(NUM_BANDS);
   simPhase += 0.04;
-
   for (let b = 0; b < NUM_BANDS; b++) {
     const f = bandCenterFreq(b);
     let level;
-
     switch (s.simMode) {
-      case 'pink': {
-        level = -20 - (b / NUM_BANDS) * 30 + (Math.random() - 0.5) * 8;
-        break;
-      }
-      case 'white': {
-        level = -35 + (Math.random() - 0.5) * 12;
-        break;
-      }
+      case 'pink':  level = -22 - (b / NUM_BANDS) * 28 + (Math.random() - 0.5) * 7; break;
+      case 'white': level = -36 + (Math.random() - 0.5) * 14; break;
       case 'sine': {
         const sweepBand = ((simPhase * 0.5) % 1) * NUM_BANDS;
-        const dist = Math.abs(b - sweepBand);
-        level = -20 - dist * 3 + (Math.random() - 0.5) * 4;
+        level = -18 - Math.abs(b - sweepBand) * 3 + (Math.random() - 0.5) * 3;
         break;
       }
-      default: { // room noise
+      default: {
         const logF = Math.log10(f / 20) / Math.log10(1000);
-        const shape = -28 - logF * 12
-          + Math.sin(b * 0.4 + simPhase * 0.3) * 3
-          + (Math.random() - 0.5) * 5;
-        // dip around 2-4kHz
-        const dip = b > 38 && b < 52 ? -6 : 0;
-        level = shape + dip;
-        break;
+        level = -26 - logF * 10 + Math.sin(b * 0.45 + simPhase * 0.25) * 4 + (Math.random() - 0.5) * 5;
+        level += (b > 38 && b < 52) ? -5 : 0;
       }
     }
-
-    out[b] = Math.max(DB_MIN, Math.min(-6, level));
+    out[b] = Math.max(DB_MIN, Math.min(-4, level));
   }
   return out;
 }
 
-// ── Update state ───────────────────────────────────────────────────────────
-const AVG_ALPHA = 0.15;
-
+// ─── State update ─────────────────────────────────────────────────────────────
 function applyBins(newBins, newDb) {
   const decayDb = s.decay * 0.5;
-
   for (let b = 0; b < NUM_BANDS; b++) {
     bins[b] = Math.max(newBins[b], bins[b] - decayDb);
-
     avgs[b] = avgs[b] * (1 - AVG_ALPHA) + newBins[b] * AVG_ALPHA;
-
-    if (newBins[b] >= peaks[b]) {
-      peaks[b] = newBins[b];
-      peakAge[b] = 0;
-    } else {
-      peakAge[b]++;
-      if (peakAge[b] > 60) peaks[b] -= 0.3;
-    }
+    if (newBins[b] >= peaks[b]) { peaks[b] = newBins[b]; peakAge[b] = 0; }
+    else { peakAge[b]++; if (peakAge[b] > 60) peaks[b] -= 0.25; }
   }
-
   dbLevel = Math.max(newDb, dbLevel - decayDb * 0.5);
-
-  if (newDb >= meterPeak) {
-    meterPeak = newDb;
-    meterAge = 0;
-  } else {
-    meterAge++;
-    if (meterAge > 80) meterPeak -= 0.5;
-  }
+  if (newDb >= meterPeak) { meterPeak = newDb; meterAge = 0; }
+  else { meterAge++; if (meterAge > 80) meterPeak -= 0.5; }
 }
 
-// ── Hover ──────────────────────────────────────────────────────────────────
-rtaCanvas.addEventListener('mousemove', (e) => {
-  const rect = rtaCanvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const b = Math.floor((x / rtaCanvas.width) * NUM_BANDS);
-  hoverBand = b >= 0 && b < NUM_BANDS ? b : -1;
+// ─── Hover ────────────────────────────────────────────────────────────────────
+rtaCanvas.addEventListener('mousemove', e => {
+  const rect  = rtaCanvas.getBoundingClientRect();
+  const xFrac = (e.clientX - rect.left) / rtaCanvas.offsetWidth;
+  const freq  = F_MIN * Math.pow(F_MAX / F_MIN, xFrac);
+  const b     = Math.floor(Math.log(freq / F_MIN) / Math.log(F_MAX / F_MIN) * NUM_BANDS);
+  hoverBand   = (b >= 0 && b < NUM_BANDS) ? b : -1;
   if (hoverBand >= 0) {
-    hoverFreq = bandCenterFreq(hoverBand);
-    document.getElementById('header-right').textContent =
-      `${hoverFreq < 1000 ? Math.round(hoverFreq) : (hoverFreq / 1000).toFixed(1) + 'k'} Hz` +
-      `  ${bins[hoverBand].toFixed(1)} dB fs`;
+    const f    = bandCenterFreq(hoverBand);
+    const fStr = f < 1000 ? Math.round(f) + ' Hz' : (f / 1000).toFixed(1) + ' kHz';
+    document.getElementById('freq-read').textContent = fStr;
+    document.getElementById('db-read').textContent   = bins[hoverBand].toFixed(1) + ' dBfs';
   }
 });
-rtaCanvas.addEventListener('mouseleave', () => {
-  hoverBand = -1;
-  document.getElementById('header-right').textContent =
-    `${Math.abs(dbLevel).toFixed(1)} dB fs`;
-});
+rtaCanvas.addEventListener('mouseleave', () => { hoverBand = -1; });
 
-// ── Controls ───────────────────────────────────────────────────────────────
-document.getElementById('decay').addEventListener('input', (e) => {
+// ─── Controls ─────────────────────────────────────────────────────────────────
+document.getElementById('decay').addEventListener('input', e => {
   document.getElementById('decay-val').textContent = e.target.value;
 });
 document.getElementById('peak-hold').addEventListener('change', () => {
-  if (!document.getElementById('peak-hold').checked) {
-    peaks.fill(DB_MIN);
-    meterPeak = DB_MIN;
+  if (!document.getElementById('peak-hold').checked) { peaks.fill(DB_MIN); meterPeak = DB_MIN; }
+});
+
+// ─── WebSocket ────────────────────────────────────────────────────────────────
+let ws, wsRetry;
+function connectWS() {
+  ws = new WebSocket(WS_URL);
+  ws.onopen = () => {
+    connected = true; setConnected(true); clearTimeout(wsRetry);
+    setInterval(() => { if (ws.readyState === 1) ws.send('ping'); }, 15000);
+  };
+  ws.onmessage = e => { try { const d = JSON.parse(e.data); applyBins(d.bins, d.db_level); } catch {} };
+  ws.onclose = ws.onerror = () => { connected = false; setConnected(false); wsRetry = setTimeout(connectWS, 3000); };
+}
+function setConnected(on) {
+  document.getElementById('status-dot').className = on ? 'on' : '';
+  document.getElementById('status-text').className = on ? 'on' : '';
+  document.getElementById('status-text').textContent = on ? 'CONNECTED' : 'SIMULATED';
+  document.getElementById('status-dot-ctrl').style.background = on ? 'var(--green)' : 'var(--text-lo)';
+}
+connectWS();
+
+// ─── Sessions ─────────────────────────────────────────────────────────────────
+const sessionBtn  = document.getElementById('session-btn');
+const sessionName = document.getElementById('session-name');
+const sessionChip = document.getElementById('session-chip');
+
+sessionBtn.addEventListener('click', async () => {
+  if (activeSession) {
+    await fetch(`${BASE_URL}/sessions/${activeSession.id}/end`, {
+      method: 'PUT', headers: apiHeaders()
+    }).catch(() => {});
+    activeSession = null;
+    sessionBtn.textContent = 'Start';
+    sessionBtn.classList.remove('recording');
+    sessionName.disabled = false;
+    sessionChip.style.display = 'none';
+  } else {
+    const name = sessionName.value.trim();
+    if (!name) { sessionName.focus(); return; }
+    try {
+      const res  = await fetch(`${BASE_URL}/sessions`, {
+        method: 'POST', headers: apiHeaders(), body: JSON.stringify({ name })
+      });
+      const data = await res.json();
+      activeSession = { id: data.id, name: data.name };
+      sessionBtn.textContent = 'Stop';
+      sessionBtn.classList.add('recording');
+      sessionName.disabled = true;
+      sessionChip.textContent = 'REC · ' + name;
+      sessionChip.style.display = '';
+    } catch {
+      alert('Could not reach backend — is it running?');
+    }
   }
 });
 
-// ── WebSocket ──────────────────────────────────────────────────────────────
-let ws, wsRetry;
+// ─── History panel ────────────────────────────────────────────────────────────
+async function loadHistory() {
+  const list = document.getElementById('history-list');
+  list.innerHTML = '<div id="history-empty" style="color:var(--text-lo);text-align:center;margin-top:40px;font-size:11px;">Loading...</div>';
 
-function connectWS() {
-  ws = new WebSocket(WS_URL);
+  let sessions;
+  try {
+    const res = await fetch(`${BASE_URL}/sessions`, { headers: apiHeaders() });
+    sessions  = await res.json();
+  } catch {
+    list.innerHTML = '<div id="history-empty" style="color:var(--red);text-align:center;margin-top:40px;font-size:11px;">Could not reach backend.</div>';
+    return;
+  }
 
-  ws.onopen = () => {
-    connected = true;
-    document.getElementById('status').textContent = 'ESP32 · connected';
-    document.getElementById('status').classList.add('connected');
-    clearTimeout(wsRetry);
-    // keep-alive ping every 15s
-    setInterval(() => { if (ws.readyState === 1) ws.send('ping'); }, 15000);
-  };
+  if (!sessions.length) {
+    list.innerHTML = '<div id="history-empty" style="color:var(--text-lo);text-align:center;margin-top:40px;font-size:11px;">No sessions yet — start one from the controls below.</div>';
+    return;
+  }
 
-  ws.onmessage = (e) => {
-    try {
-      const d = JSON.parse(e.data);
-      applyBins(d.bins, d.db_level);
-    } catch {}
-  };
-
-  ws.onclose = ws.onerror = () => {
-    connected = false;
-    document.getElementById('status').textContent = 'Simulated · replace with ESP32 WebSocket';
-    document.getElementById('status').classList.remove('connected');
-    wsRetry = setTimeout(connectWS, 3000);
-  };
+  list.innerHTML = '';
+  for (const session of sessions) {
+    const card = document.createElement('div');
+    card.className = 'session-card';
+    const date = new Date(session.start_time);
+    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      + ' · ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const duration = session.end_time
+      ? Math.round((new Date(session.end_time) - date) / 60000) + ' min'
+      : 'In progress';
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-title">${session.name}</div>
+        <div class="card-meta">${dateStr} &nbsp;·&nbsp; ${duration}</div>
+      </div>
+      <canvas class="mini-spectrum" id="mini-${session.id}"></canvas>
+      <div class="card-stats" id="stats-${session.id}">
+        <div class="stat-item"><div class="stat-label">Readings</div><div class="stat-value">—</div></div>
+        <div class="stat-item"><div class="stat-label">Avg dB</div><div class="stat-value">—</div></div>
+      </div>
+    `;
+    list.appendChild(card);
+    loadSessionAvg(session.id);
+  }
 }
 
-connectWS();
+async function loadSessionAvg(id) {
+  let data;
+  try {
+    const res = await fetch(`${BASE_URL}/sessions/${id}/average`, { headers: apiHeaders() });
+    data = await res.json();
+  } catch { return; }
 
-// ── FPS counter ────────────────────────────────────────────────────────────
+  const statsEl = document.getElementById(`stats-${id}`);
+  if (!data.avg_bins) {
+    statsEl.innerHTML = '<div class="stat-item"><div class="stat-label">Readings</div><div class="stat-value">0</div></div>';
+    return;
+  }
+
+  statsEl.innerHTML = `
+    <div class="stat-item"><div class="stat-label">Readings</div><div class="stat-value">${data.count}</div></div>
+    <div class="stat-item"><div class="stat-label">Avg dB</div><div class="stat-value">${data.avg_db} dBfs</div></div>
+    <div class="stat-item"><div class="stat-label">Peak band</div><div class="stat-value">${peakBandLabel(data.avg_bins)}</div></div>
+  `;
+
+  const canvas = document.getElementById(`mini-${id}`);
+  if (canvas) {
+    requestAnimationFrame(() => drawMiniSpectrum(canvas, data.avg_bins));
+  }
+}
+
+function peakBandLabel(bins) {
+  const maxIdx = bins.reduce((mi, v, i, a) => v > a[mi] ? i : mi, 0);
+  const freq   = F_MIN * Math.pow(F_MAX / F_MIN, (maxIdx + 0.5) / NUM_BANDS);
+  return freq < 1000 ? Math.round(freq) + ' Hz' : (freq / 1000).toFixed(1) + ' kHz';
+}
+
+function drawMiniSpectrum(canvas, avgBins) {
+  canvas.width = canvas.offsetWidth || canvas.clientWidth || 400;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Filled area
+  ctx.beginPath();
+  for (let b = 0; b < NUM_BANDS; b++) {
+    const cx   = freqToX(F_MIN * Math.pow(F_MAX / F_MIN, (b + 0.5) / NUM_BANDS), w);
+    const norm = Math.max(0, (avgBins[b] - DB_MIN) / DB_RANGE);
+    const y    = h * (1 - norm);
+    b === 0 ? ctx.moveTo(cx, y) : ctx.lineTo(cx, y);
+  }
+  ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0,   'rgba(150,110,230,0.75)');
+  grad.addColorStop(0.6, 'rgba(90,55,170,0.40)');
+  grad.addColorStop(1,   'rgba(60,30,120,0.10)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  for (let b = 0; b < NUM_BANDS; b++) {
+    const cx   = freqToX(F_MIN * Math.pow(F_MAX / F_MIN, (b + 0.5) / NUM_BANDS), w);
+    const norm = Math.max(0, (avgBins[b] - DB_MIN) / DB_RANGE);
+    const y    = h * (1 - norm);
+    b === 0 ? ctx.moveTo(cx, y) : ctx.lineTo(cx, y);
+  }
+  ctx.strokeStyle = 'rgba(185,145,255,0.85)';
+  ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.stroke();
+}
+
+// ─── Tab switching ────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const isHistory = tab.dataset.tab === 'history';
+    document.getElementById('spectrum-view').style.display = isHistory ? 'none' : 'flex';
+    document.getElementById('history-panel').style.display = isHistory ? 'flex' : 'none';
+    if (isHistory) loadHistory();
+    else setTimeout(resize, 10);
+  });
+});
+
+document.getElementById('refresh-btn').addEventListener('click', loadHistory);
+
+// ─── FPS ──────────────────────────────────────────────────────────────────────
 function updateFps() {
   frameCount++;
   const now = performance.now();
   if (now - lastFpsTime >= 1000) {
     fps = Math.round(frameCount * 1000 / (now - lastFpsTime));
-    frameCount = 0;
-    lastFpsTime = now;
-    document.getElementById('fps-badge').textContent = `FPS: ${fps}`;
+    frameCount = 0; lastFpsTime = now;
+    document.getElementById('fps-chip').textContent = fps + ' FPS';
   }
 }
 
-// ── Render loop ────────────────────────────────────────────────────────────
+// ─── Render loop ──────────────────────────────────────────────────────────────
 function frame() {
   if (!connected) {
-    const simBins = generateSim();
-    const simDb   = Math.max(...simBins) - 2 + (Math.random() - 0.5) * 2;
-    applyBins(simBins, simDb);
+    const flatBins = new Float32Array(NUM_BANDS).fill(-60);
+    applyBins(flatBins, -60);
   }
-
-  drawRTA();
-  drawMeter();
-
+  drawRTA(); drawMeter();
   if (hoverBand < 0) {
-    document.getElementById('header-right').textContent =
-      `${dbLevel.toFixed(1)} dB fs`;
+    document.getElementById('freq-read').textContent = '— Hz';
+    document.getElementById('db-read').textContent   = dbLevel.toFixed(1) + ' dBfs';
   }
-  document.getElementById('meter-db').textContent = `${dbLevel.toFixed(1)} dB`;
-
+  document.getElementById('meter-db').textContent = dbLevel.toFixed(1);
   updateFps();
   requestAnimationFrame(frame);
 }
 
-// ── Init ───────────────────────────────────────────────────────────────────
-window.addEventListener('load', () => {
-  // Wait a tick for layout to settle
-  setTimeout(() => {
-    resize();
-    frame();
-  }, 50);
-});
+// ─── Init ─────────────────────────────────────────────────────────────────────
+window.addEventListener('load', () => { setTimeout(() => { resize(); frame(); }, 60); });
 </script>
 </body>
 </html>
