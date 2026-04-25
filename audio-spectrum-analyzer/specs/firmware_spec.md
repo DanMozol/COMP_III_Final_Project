@@ -10,17 +10,53 @@
 | ESP32      | Microcontroller + WiFi          |
 | INMP441    | I2S digital MEMS microphone     |
 
-### INMP441 Wiring
+See `hardware_spec.md` for wiring.
 
+---
+
+## Setup & Flashing
+
+### Requirements
+- [PlatformIO](https://platformio.org/) (VS Code extension or CLI)
+- ESP32 connected via USB
+
+### 1. Configure
+
+Edit the constants at the top of `firmware/src/main.cpp`:
+
+```cpp
+const char* WIFI_SSID  = "Your_Network_Name";
+const char* WIFI_PASS  = "Your_WiFi_Password";
+const char* SERVER_URL = "https://your-backend.onrender.com/data";
+                      // or "http://<local-ip>:8000/data" for local dev
+const char* API_TOKEN  = "your-secret-token-here";   // must match backend API_TOKEN
+const char* DEVICE_ID  = "ESP32_STATION_01";          // unique per board
 ```
-INMP441 Pin → ESP32 Pin
-VDD         → 3.3V
-GND         → GND
-L/R         → GND    (selects left channel)
-WS          → GPIO 25
-SCK         → GPIO 26
-SD          → GPIO 22
+
+For multiple boards, flash each with a unique `DEVICE_ID` (`ESP32_STATION_02`, etc). Everything else is identical.
+
+### 2. Flash
+
+```bash
+cd audio-spectrum-analyzer/firmware
+pio run --target upload
 ```
+
+### 3. Monitor serial output
+
+```bash
+pio device monitor
+```
+
+Expected output once connected:
+```
+[WiFi] Connected: 192.168.x.x
+[I2S] Initialized — INMP441 ready
+[Audio] dB=-42.3  Band[0]=-60.1  Band[32]=-48.2  Band[63]=-55.9
+[POST] 200  dB=-42.3
+```
+
+`[POST] 200` confirms the backend is receiving data.
 
 ---
 
@@ -39,13 +75,15 @@ SD          → GPIO 22
 ## Audio Pipeline (runs every second)
 
 ```
-I2S read (1024 x 32-bit samples @ 44100 Hz)
+I2S read (512 x 32-bit stereo samples @ 44100 Hz)
+    ↓
+Extract left channel only (even indices of stereo buffer)
     ↓
 dBFS calculation (RMS of raw samples → 20·log10)
     ↓
 Hamming window applied to samples
     ↓
-Forward FFT (1024-point complex)
+Forward FFT (512-point complex)
     ↓
 Complex → magnitude
     ↓
@@ -58,25 +96,25 @@ HTTP POST { device_id, db_level, bins[64] }
 
 ## I2S Configuration
 
-| Parameter          | Value                       |
-|--------------------|-----------------------------|
-| Mode               | Master RX                   |
-| Sample rate        | 44100 Hz                    |
-| Bits per sample    | 32-bit (24-bit data, left-justified) |
-| Channel format     | Left channel only           |
-| DMA buffer count   | 8                           |
-| DMA buffer length  | 128 samples                 |
+| Parameter          | Value                                       |
+|--------------------|---------------------------------------------|
+| Mode               | Master RX                                   |
+| Sample rate        | 44100 Hz                                    |
+| Bits per sample    | 32-bit (24-bit audio, left-justified)       |
+| Channel format     | Right/Left stereo (left channel used)       |
+| DMA buffer count   | 8                                           |
+| DMA buffer length  | 128 samples                                 |
 
 ---
 
 ## FFT Configuration
 
-| Parameter     | Value                                         |
-|---------------|-----------------------------------------------|
-| FFT size      | 1024 samples                                  |
-| Window        | Hamming                                       |
-| Frequency res.| 44100 / 1024 ≈ 43 Hz per raw bin             |
-| Output bands  | 64 logarithmically-spaced (20Hz–20kHz)        |
+| Parameter      | Value                                        |
+|----------------|----------------------------------------------|
+| FFT size       | 512 samples                                  |
+| Window         | Hamming                                      |
+| Frequency res. | 44100 / 512 ≈ 86 Hz per raw bin             |
+| Output bands   | 64 logarithmically-spaced (20Hz–20kHz)       |
 
 **Sample normalization:**
 The INMP441 outputs 24-bit audio left-justified in a 32-bit I2S word.
@@ -84,15 +122,17 @@ The INMP441 outputs 24-bit audio left-justified in a 32-bit I2S word.
 
 **Band mapping:**
 Each of the 64 output bands covers a log-spaced frequency range.
-The boundaries are: `f = 20 * (20000/20)^(band/64)` Hz.
+Band edges: `f = 20 * (20000/20)^(band/64)` Hz.
 The average FFT magnitude within each band is converted to dBFS.
+
+> Note: `vReal`, `vImag`, and `i2s_raw` are declared globally to avoid stack overflow — large arrays on the ESP32 stack will crash the device.
 
 ---
 
 ## dB Calculation
 
 ```
-RMS = sqrt( mean( sample^2 ) )   // over all 1024 raw samples
+RMS  = sqrt( mean( sample² ) )   // over all 512 raw samples
 dBFS = 20 * log10( RMS )
 floor = -96 dBFS                  // returned when RMS < 1e-10
 ```
@@ -101,7 +141,7 @@ floor = -96 dBFS                  // returned when RMS < 1e-10
 
 ## HTTP POST
 
-- **URL:** `http://<server>:8000/data`
+- **URL:** configured via `SERVER_URL` constant
 - **Method:** POST
 - **Headers:**
   - `Content-Type: application/json`
@@ -111,31 +151,8 @@ floor = -96 dBFS                  // returned when RMS < 1e-10
 {
   "device_id": "ESP32_STATION_01",
   "db_level": -42.3,
-  "bins": [-60.1, -58.4, ...]
+  "bins": [-60.1, -58.4, "...64 values total..."]
 }
 ```
-- **Interval:** 1 second (`delay(1000)` at end of loop)
-
----
-
-## Serial Debug Output
-
-Every loop iteration prints:
-```
-[Audio] dB=-42.3  Band[0]=-60.1  Band[32]=-48.2  Band[63]=-55.9
-[POST] 200  dB=-42.3
-```
-
----
-
-## Configuration Constants
-
-All user-configurable values are at the top of `main.cpp`:
-
-```cpp
-const char* WIFI_SSID  = "YOUR_WIFI_SSID";
-const char* WIFI_PASS  = "YOUR_WIFI_PASSWORD";
-const char* SERVER_URL = "http://<YOUR_SERVER_IP>:8000/data";
-const char* API_TOKEN  = "your-secret-token-here";
-const char* DEVICE_ID  = "ESP32_STATION_01";
-```
+- **Interval:** 1 POST per second (`delay(1000)` at end of loop)
+- **On WiFi disconnect:** POST is skipped, loop continues, reconnection is automatic

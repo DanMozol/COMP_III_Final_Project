@@ -15,13 +15,14 @@
 #include <math.h>
 
 // ---------------------------------------------------------------------------
-// User config — fill these in before flashing
+// Credentials injected at build time from secrets.ini (never committed)
+// Copy secrets.ini.example → secrets.ini and fill in your values
 // ---------------------------------------------------------------------------
-const char* WIFI_SSID    = "Dan Mozol";
-const char* WIFI_PASS    = "HallPass";
-const char* SERVER_URL   = "http://10.109.3.233:8000/data";
-const char* API_TOKEN    = "DanMozolIsSuperCool!13";
-const char* DEVICE_ID    = "ESP32_STATION_01";
+const char* WIFI_SSID  = CONFIG_WIFI_SSID;
+const char* WIFI_PASS  = CONFIG_WIFI_PASS;
+const char* SERVER_URL = CONFIG_SERVER_URL;
+const char* API_TOKEN  = CONFIG_API_TOKEN;
+const char* DEVICE_ID  = "ESP32_STATION_01";
 
 // ---------------------------------------------------------------------------
 // I2S pins for INMP441
@@ -204,9 +205,32 @@ void setup() {
 }
 
 // ---------------------------------------------------------------------------
+// Reconnect to WiFi if connection dropped
+// ---------------------------------------------------------------------------
+void wifi_reconnect() {
+    if (WiFi.status() == WL_CONNECTED) return;
+    Serial.print("[WiFi] Reconnecting");
+    WiFi.disconnect();
+    WiFi.begin(WIFI_SSID, WIFI_PASS);
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+        delay(500);
+        Serial.print(".");
+        attempts++;
+    }
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("\n[WiFi] Reconnected: " + WiFi.localIP().toString());
+    } else {
+        Serial.println("\n[WiFi] Reconnect failed — will retry next cycle");
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Main loop — runs once per second
 // ---------------------------------------------------------------------------
 void loop() {
+    wifi_reconnect();
+
     // 1. Read raw mic samples
     read_samples();
 
@@ -229,5 +253,5 @@ void loop() {
     // 6. POST to API
     post_data(db_level, bands);
 
-    delay(1000);
+    delay(250);
 }

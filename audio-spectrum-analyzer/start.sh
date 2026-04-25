@@ -1,9 +1,14 @@
 #!/bin/bash
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 
-# Start backend in background
+# Start backend in background (use .venv if present, otherwise system uvicorn)
 cd "$ROOT/backend"
-uvicorn main:app --host 0.0.0.0 --port 8000 &
+if [ -f ".venv/bin/uvicorn" ]; then
+  UVICORN=".venv/bin/uvicorn"
+else
+  UVICORN="uvicorn"
+fi
+$UVICORN main:app --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 
 # Open frontend in browser

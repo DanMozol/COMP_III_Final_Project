@@ -1,20 +1,36 @@
 # Database Specification
-### Room Audio Monitor — MongoDB
+### Room Audio Monitor — MongoDB Atlas
 
 ---
 
 ## Overview
 
-MongoDB Atlas is used as the primary database. All audio readings are stored in a **native time-series collection** (`timeseries`) which is optimized by MongoDB for sequential time-based data — it uses columnar storage internally and has much better query and storage efficiency than a regular collection for this workload.
+MongoDB Atlas (free tier M0 cluster) is the database. Two collections are used:
+- `readings` — time-series collection for audio data, auto-expires after 30 days
+- `sessions` — named recording sessions with start/end times
+
+Both are created automatically by `main.py` on server startup.
+
+---
+
+## Atlas Setup
+
+1. Create a free M0 cluster at [cloud.mongodb.com](https://cloud.mongodb.com)
+2. Create a database user with read/write access
+3. Under **Network Access**, add `0.0.0.0/0` to allow connections from any IP (required for Render deployment)
+4. Get your connection string from **Connect → Drivers**:
+   ```
+   mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/?retryWrites=true&w=majority
+   ```
+5. Set this as the `MONGO_URI` environment variable on your server
 
 ---
 
 ## Collection: `readings`
 
-**Type:** MongoDB Time-Series Collection
+**Type:** Native MongoDB Time-Series Collection
 
-**Created automatically** by `main.py` on server startup if it doesn't already exist:
-
+Auto-created on startup:
 ```python
 await db.create_collection(
     "readings",
@@ -23,51 +39,66 @@ await db.create_collection(
         "metaField": "device_id",
         "granularity": "seconds",
     },
-    expireAfterSeconds=2592000  # 30 days
+    expireAfterSeconds=60 * 60 * 24 * 30   # 30 days
 )
 ```
 
----
+Time-series collections use columnar storage internally — much better query and storage efficiency than a regular collection for sequential timestamped data.
 
-## Document Schema
+### Document Schema
 
 ```json
 {
-  "device_id": "ESP32_STATION_01",   // metaField — identifies the sensor
-  "db_level":  -42.3,                // overall dBFS reading
-  "bins": [                          // 64 log-spaced frequency bands (dBFS each)
-    -60.1, -58.4, -55.2, ...         // index 0 = ~20Hz, index 63 = ~20kHz
-  ],
-  "timestamp": "2025-04-13T14:00:01Z"  // timeField — UTC
+  "device_id": "ESP32_STATION_01",
+  "db_level":  -42.3,
+  "bins": [-60.1, -58.4, -55.2, "...64 values total..."],
+  "timestamp": "2025-04-13T14:00:01Z"
 }
 ```
 
-| Field       | Type            | Description                                   |
-|-------------|-----------------|-----------------------------------------------|
-| `device_id` | string          | Sensor identifier, used as the meta field     |
-| `db_level`  | float           | Overall room loudness in dBFS                 |
-| `bins`      | array[64 float] | FFT energy per log-spaced band in dBFS        |
-| `timestamp` | datetime (UTC)  | When the reading was captured                 |
+| Field       | Type            | Description                                |
+|-------------|-----------------|--------------------------------------------|
+| `device_id` | string          | Sensor identifier (metaField)              |
+| `db_level`  | float           | Overall room loudness in dBFS              |
+| `bins`      | array[64 float] | FFT energy per log-spaced band in dBFS     |
+| `timestamp` | datetime (UTC)  | When the reading was captured (timeField)  |
 
----
-
-## TTL / Data Retention
-
-Documents are automatically deleted after **30 days** via the `expireAfterSeconds` setting on the time-series collection. No separate TTL index is needed — this is handled natively by the collection definition.
-
----
-
-## Indexes
-
-A compound index is created on startup to speed up the most common query pattern (fetch readings for a specific device within a time window):
+### Indexes
 
 ```python
 await collection.create_index([("device_id", 1), ("timestamp", -1)])
 ```
 
+Speeds up the most common query: readings for a specific device within a time window.
+
 ---
 
-## Query Patterns
+## Collection: `sessions`
+
+**Type:** Regular collection (no TTL — sessions are kept indefinitely)
+
+### Document Schema
+
+```json
+{
+  "_id":        ObjectId("..."),
+  "name":       "Sunday Service",
+  "start_time": "2025-04-13T14:00:00Z",
+  "end_time":   "2025-04-13T16:30:00Z"
+}
+```
+
+`end_time` is `null` while a session is in progress.
+
+### Index
+
+```python
+await sessions_col.create_index([("start_time", -1)])
+```
+
+---
+
+## Common Query Patterns
 
 ### Fetch last N hours of readings
 ```python
@@ -81,7 +112,7 @@ collection.find({"timestamp": {"$gte": since}, "device_id": "ESP32_STATION_01"})
 [
   {"$match": {"timestamp": {"$gte": since}}},
   {"$group": {
-      "_id": None,
+      "_id":    None,
       "min_db": {"$min": "$db_level"},
       "max_db": {"$max": "$db_level"},
       "avg_db": {"$avg": "$db_level"},
@@ -90,11 +121,20 @@ collection.find({"timestamp": {"$gte": since}, "device_id": "ESP32_STATION_01"})
 ]
 ```
 
+### Session average (all readings within session window)
+```python
+collection.find({
+    "timestamp": {"$gte": session["start_time"], "$lte": session["end_time"]}
+})
+```
+
 ---
 
 ## Environment Variables
 
 ```
-MONGO_URI=mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/<dbname>?retryWrites=true&w=majority
+MONGO_URI=mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/?retryWrites=true&w=majority
 MONGO_DB_NAME=audio_spectrum
 ```
+
+These go in `backend/.env` for local dev, and as env vars in Render for deployment.

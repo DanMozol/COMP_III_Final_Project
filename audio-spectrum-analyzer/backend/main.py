@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from motor.motor_asyncio import AsyncIOMotorClient
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from typing import Optional
 from bson import ObjectId
 import datetime
@@ -14,7 +14,7 @@ import certifi
 
 FRONTEND_DIR = pathlib.Path(__file__).parent.parent / "frontend"
 
-load_dotenv()
+load_dotenv(find_dotenv())
 
 # ---------------------------------------------------------------------------
 # Config
@@ -206,6 +206,8 @@ async def get_stats(
 # Routes — sessions
 # ---------------------------------------------------------------------------
 
+MAX_SESSIONS = 3
+
 @app.post("/sessions", summary="Start a named session")
 async def start_session(session: SessionCreate, _: str = Depends(verify_token)):
     doc = {
@@ -214,6 +216,13 @@ async def start_session(session: SessionCreate, _: str = Depends(verify_token)):
         "end_time":   None,
     }
     result = await sessions_col.insert_one(doc)
+
+    # Keep only the MAX_SESSIONS most recent; delete the rest
+    cursor = sessions_col.find({}, {"_id": 1}).sort("start_time", -1).skip(MAX_SESSIONS)
+    old_ids = [d["_id"] async for d in cursor]
+    if old_ids:
+        await sessions_col.delete_many({"_id": {"$in": old_ids}})
+
     return {"id": str(result.inserted_id), "name": session.name}
 
 
