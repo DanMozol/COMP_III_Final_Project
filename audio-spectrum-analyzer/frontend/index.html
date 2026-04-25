@@ -11,480 +11,215 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg0: #0e0e10;
-  --bg1: #141417;
-  --bg2: #1a1a1f;
-  --bg3: #202028;
-  --border: rgba(255,255,255,0.06);
-  --border-hi: rgba(255,255,255,0.13);
-  --gold: #f0a840;
-  --gold-dim: rgba(240,168,64,0.18);
-  --gold-glow: rgba(240,168,64,0.35);
-  --purple: #9a7fd4;
-  --purple-bright: #b899f0;
-  --purple-fill: rgba(150,110,220,0.72);
-  --purple-dark: rgba(90,60,160,0.55);
-  --purple-glow: rgba(150,110,220,0.15);
-  --cyan: #40d0e8;
-  --text-hi: #e8e6f0;
-  --text-mid: #9a98a8;
-  --text-lo: #52505c;
-  --red: #e05060;
-  --orange: #e08840;
-  --green: #50d890;
-  --grid: rgba(255,255,255,0.04);
-  --grid-hi: rgba(255,255,255,0.09);
+  --bg0: #0e0e10; --bg1: #141417; --bg2: #1a1a1f; --bg3: #202028;
+  --border: rgba(255,255,255,0.06); --border-hi: rgba(255,255,255,0.13);
+  --gold: #f0a840; --gold-dim: rgba(240,168,64,0.18);
+  --purple: #9a7fd4; --purple-bright: #b899f0;
+  --cyan: #40d0e8; --green: #50d890; --red: #e05060; --orange: #e08840;
+  --text-hi: #e8e6f0; --text-mid: #9a98a8; --text-lo: #52505c;
 }
 
 body {
-  background: var(--bg0);
-  color: var(--text-mid);
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-  user-select: none;
+  background: var(--bg0); color: var(--text-mid);
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  display: flex; flex-direction: column; height: 100vh;
+  overflow: hidden; user-select: none;
 }
 
 /* ── Titlebar ── */
 #titlebar {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  height: 32px;
-  background: var(--bg1);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  padding: 0 12px;
-  position: relative;
+  display: flex; align-items: center; height: 32px;
+  background: var(--bg1); border-bottom: 1px solid var(--border);
+  flex-shrink: 0; padding: 0 12px;
 }
+#logo { display: flex; align-items: center; gap: 8px; margin-right: 16px; }
+#logo-mark { display: flex; align-items: center; gap: 2px; }
+#logo-mark span { display: block; width: 3px; border-radius: 1px; background: var(--purple-bright); }
+#logo-mark span:nth-child(1){height:8px} #logo-mark span:nth-child(2){height:12px}
+#logo-mark span:nth-child(3){height:6px} #logo-mark span:nth-child(4){height:10px}
+#logo-text { font-family:'Rajdhani',sans-serif; font-size:15px; font-weight:700; color:var(--text-hi); letter-spacing:1px; }
+#logo-sub  { font-family:'Rajdhani',sans-serif; font-size:15px; font-weight:400; color:var(--purple); letter-spacing:1px; }
 
-#logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-right: 16px;
-}
-
-#logo-mark {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-#logo-mark span {
-  display: block;
-  width: 3px;
-  border-radius: 1px;
-  background: var(--purple-bright);
-}
-#logo-mark span:nth-child(1) { height: 8px; }
-#logo-mark span:nth-child(2) { height: 12px; }
-#logo-mark span:nth-child(3) { height: 6px; }
-#logo-mark span:nth-child(4) { height: 10px; }
-
-#logo-text {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-hi);
-  letter-spacing: 1px;
-}
-
-#logo-sub {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 15px;
-  font-weight: 400;
-  color: var(--purple);
-  letter-spacing: 1px;
-}
-
-#tabs {
-  display: flex;
-  gap: 1px;
-  height: 100%;
-  align-items: stretch;
-  margin-right: auto;
-}
-
+#tabs { display:flex; gap:1px; height:100%; align-items:stretch; margin-right:auto; }
 .tab {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: .8px;
-  color: var(--text-lo);
-  padding: 0 14px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: color .15s, border-color .15s;
+  font-family:'Rajdhani',sans-serif; font-size:12px; font-weight:600;
+  letter-spacing:.8px; color:var(--text-lo); padding:0 14px;
+  display:flex; align-items:center; cursor:pointer;
+  border-bottom:2px solid transparent; transition:color .15s,border-color .15s;
 }
-.tab:hover { color: var(--text-mid); }
-.tab.active {
-  color: var(--gold);
-  border-bottom-color: var(--gold);
-}
+.tab:hover { color:var(--text-mid); }
+.tab.active { color:var(--gold); border-bottom-color:var(--gold); }
 
-#readout {
-  font-size: 11px;
-  color: var(--text-mid);
-  letter-spacing: .3px;
-  display: flex;
-  gap: 14px;
-  align-items: center;
-}
+#readout { font-size:11px; color:var(--text-mid); display:flex; gap:14px; align-items:center; }
+#freq-read { color:var(--gold); font-weight:500; min-width:64px; text-align:right; }
+#db-read   { color:var(--text-hi); font-weight:500; min-width:54px; text-align:right; }
+.read-sep  { color:var(--text-lo); }
 
-#freq-read { color: var(--gold); font-weight: 500; min-width: 64px; text-align: right; }
-#db-read   { color: var(--text-hi); font-weight: 500; min-width: 54px; text-align: right; }
-.read-sep  { color: var(--text-lo); }
-
-/* ── Sub-header ── */
+/* ── Subheader ── */
 #subheader {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 24px;
-  padding: 0 12px;
-  background: var(--bg1);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
+  display:flex; align-items:center; gap:8px; height:24px;
+  padding:0 12px; background:var(--bg1); border-bottom:1px solid var(--border); flex-shrink:0;
 }
-
 .chip {
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-  padding: 2px 7px;
-  border-radius: 2px;
-  border: 1px solid var(--border-hi);
-  color: var(--text-lo);
-  background: var(--bg2);
+  font-size:9px; font-weight:500; letter-spacing:.8px; text-transform:uppercase;
+  padding:2px 7px; border-radius:2px; border:1px solid var(--border-hi);
+  color:var(--text-lo); background:var(--bg2);
 }
-.chip.lit { color: var(--gold); border-color: rgba(240,168,64,0.3); background: rgba(240,168,64,0.07); }
-.chip.connected-chip { color: var(--green); border-color: rgba(80,216,144,0.3); background: rgba(80,216,144,0.07); }
-.chip.session-chip { color: var(--purple-bright); border-color: rgba(184,153,240,0.3); background: rgba(154,127,212,0.07); }
-#fps-chip { margin-left: auto; }
+.chip.lit    { color:var(--gold);          border-color:rgba(240,168,64,0.3);  background:rgba(240,168,64,0.07); }
+.chip.c-chip { color:var(--purple-bright); border-color:rgba(184,153,240,0.3); background:rgba(154,127,212,0.07); }
+#fps-chip { margin-left:auto; }
+#status-dot  { width:5px;height:5px;border-radius:50%;background:var(--text-lo);flex-shrink:0; }
+#status-dot.on { background:var(--green); box-shadow:0 0 5px rgba(80,216,144,0.6); }
+#status-text { font-size:9px; letter-spacing:.5px; color:var(--text-lo); }
+#status-text.on { color:var(--green); }
 
 /* ── Spectrum view ── */
-#spectrum-view {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
+#spectrum-view { display:flex; flex-direction:column; flex:1; min-height:0; }
+
+#devices-container { display:flex; flex-direction:column; flex:1; min-height:0; }
+
+#no-devices-msg {
+  flex:1; display:flex; align-items:center; justify-content:center;
+  color:var(--text-lo); font-size:12px; letter-spacing:.5px;
 }
 
-#display {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-  position: relative;
+/* ── Device panel ── */
+.device-panel {
+  display:flex; flex-direction:column; flex:1; min-height:0;
+  border-bottom:1px solid var(--border);
+}
+.device-panel:last-child { border-bottom:none; }
+
+.panel-header {
+  display:flex; align-items:center; gap:10px;
+  height:28px; padding:0 10px; flex-shrink:0;
+  background:var(--bg1); border-bottom:1px solid var(--border);
 }
 
-#rta-canvas { flex: 1; display: block; }
-
-#meter-sidebar {
-  width: 52px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg1);
-  border-left: 1px solid var(--border);
-  padding: 8px 0 4px 0;
-  align-items: center;
+.panel-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.panel-label {
+  font-family:'Rajdhani',sans-serif; font-size:12px; font-weight:600;
+  letter-spacing:.6px; color:var(--text-hi); min-width:120px;
 }
+.panel-db { font-size:10px; color:var(--gold); font-weight:500; margin-left:auto; min-width:60px; text-align:right; }
 
-#meter-label-top { font-size: 8px; letter-spacing: 1.5px; color: var(--text-lo); text-transform: uppercase; margin-bottom: 6px; }
-#meter-canvas { width: 18px; flex: 1; display: block; }
-#meter-db { font-size: 10px; color: var(--text-mid); margin-top: 6px; font-weight: 500; letter-spacing: .3px; }
+.panel-ctrl-group { display:flex; align-items:center; gap:6px; padding:0 8px; border-left:1px solid var(--border); }
+.panel-ctrl-label { font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--text-lo); }
 
+.panel-display { display:flex; flex:1; min-height:0; }
+.panel-rta { flex:1; display:block; }
+.panel-meter {
+  width:36px; flex-shrink:0; display:flex; flex-direction:column;
+  background:var(--bg1); border-left:1px solid var(--border);
+  padding:4px 0 2px; align-items:center;
+}
+.panel-meter-label { font-size:7px; letter-spacing:1px; color:var(--text-lo); text-transform:uppercase; margin-bottom:3px; }
+.panel-meter-canvas { width:14px; flex:1; display:block; }
+.panel-meter-db { font-size:9px; color:var(--text-mid); margin-top:3px; font-weight:500; }
+
+/* ── Freq axis ── */
 #freq-row {
-  display: flex;
-  height: 20px;
-  padding: 0 52px 0 36px;
-  flex-shrink: 0;
-  background: var(--bg1);
-  border-top: 1px solid var(--border);
+  display:flex; height:20px; padding:0 36px 0 0;
+  flex-shrink:0; background:var(--bg1); border-top:1px solid var(--border);
 }
-#freq-canvas { flex: 1; display: block; }
+#freq-canvas { flex:1; display:block; }
 
 /* ── History panel ── */
-#history-panel {
-  display: none;
-  flex: 1;
-  min-height: 0;
-  flex-direction: column;
-}
-
+#history-panel { display:none; flex:1; min-height:0; flex-direction:column; }
 #history-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  background: var(--bg1);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
+  display:flex; align-items:center; gap:12px; padding:10px 16px;
+  background:var(--bg1); border-bottom:1px solid var(--border); flex-shrink:0;
 }
-
-#history-title {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: .8px;
-  color: var(--text-hi);
-}
-
+#history-title { font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:600; letter-spacing:.8px; color:var(--text-hi); }
 #refresh-btn {
-  margin-left: auto;
-  background: var(--bg2);
-  border: 1px solid var(--border-hi);
-  border-radius: 3px;
-  color: var(--text-mid);
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  padding: 4px 10px;
-  cursor: pointer;
-  transition: border-color .15s, color .15s;
+  margin-left:auto; background:var(--bg2); border:1px solid var(--border-hi);
+  border-radius:3px; color:var(--text-mid); font-family:'DM Mono',monospace;
+  font-size:10px; padding:4px 10px; cursor:pointer; transition:border-color .15s,color .15s;
 }
-#refresh-btn:hover { border-color: var(--gold); color: var(--gold); }
+#refresh-btn:hover { border-color:var(--gold); color:var(--gold); }
+#history-list { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
+#history-list::-webkit-scrollbar { width:4px; }
+#history-list::-webkit-scrollbar-thumb { background:var(--bg3); border-radius:2px; }
 
-#history-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-#history-list::-webkit-scrollbar { width: 4px; }
-#history-list::-webkit-scrollbar-track { background: transparent; }
-#history-list::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 2px; }
-
-#history-empty {
-  color: var(--text-lo);
-  font-size: 11px;
-  letter-spacing: .5px;
-  text-align: center;
-  margin-top: 40px;
-}
-
-.session-card {
-  background: var(--bg1);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  overflow: hidden;
-  transition: border-color .2s;
-}
-.session-card:hover { border-color: var(--border-hi); }
-
-.card-header {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  padding: 10px 14px 8px;
-}
-
-.card-title {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: .5px;
-  color: var(--text-hi);
-}
-
-.card-meta {
-  font-size: 9px;
-  letter-spacing: .4px;
-  color: var(--text-lo);
-  margin-left: auto;
-}
-
-.card-stats {
-  display: flex;
-  gap: 16px;
-  padding: 6px 14px 10px;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.stat-label { font-size: 8px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-lo); }
-.stat-value { font-size: 11px; color: var(--gold); font-weight: 500; }
-
-.mini-spectrum {
-  display: block;
-  width: 100%;
-  height: 56px;
-  margin: 0;
-}
+.session-card { background:var(--bg1); border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+.session-card:hover { border-color:var(--border-hi); }
+.card-header { display:flex; align-items:baseline; gap:12px; padding:10px 14px 6px; }
+.card-title { font-family:'Rajdhani',sans-serif; font-size:14px; font-weight:600; color:var(--text-hi); }
+.card-meta  { font-size:9px; letter-spacing:.4px; color:var(--text-lo); margin-left:auto; }
+.device-block { border-top:1px solid var(--border); padding:6px 14px 8px; }
+.device-block-label { font-size:8px; letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; display:flex; align-items:center; gap:6px; }
+.device-block-dot { width:6px; height:6px; border-radius:50%; }
+.mini-spectrum { display:block; width:100%; height:44px; }
+.device-stats { display:flex; gap:16px; margin-top:4px; }
+.stat-item { display:flex; flex-direction:column; gap:1px; }
+.stat-label { font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--text-lo); }
+.stat-value { font-size:10px; color:var(--gold); font-weight:500; }
 
 /* ── Controls bar ── */
 #controls {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  height: 42px;
-  background: var(--bg1);
-  border-top: 1px solid var(--border);
-  flex-shrink: 0;
-  padding: 0 12px;
+  display:flex; align-items:center; gap:0; height:42px;
+  background:var(--bg1); border-top:1px solid var(--border); flex-shrink:0; padding:0 12px;
 }
-
-.ctrl-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 14px;
-  height: 100%;
-  border-right: 1px solid var(--border);
-}
-.ctrl-group:first-child { padding-left: 0; }
-.ctrl-group.ml-auto { margin-left: auto; border-right: none; }
-
-.ctrl-label {
-  font-size: 9px;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  color: var(--text-lo);
-}
+.ctrl-group { display:flex; align-items:center; gap:8px; padding:0 14px; height:100%; border-right:1px solid var(--border); }
+.ctrl-group:first-child { padding-left:0; }
+.ctrl-group.ml-auto { margin-left:auto; border-right:none; }
+.ctrl-label { font-size:9px; letter-spacing:1.2px; text-transform:uppercase; color:var(--text-lo); }
 
 .pro-select {
-  background: var(--bg2);
-  border: 1px solid var(--border-hi);
-  border-radius: 3px;
-  color: var(--text-hi);
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  padding: 3px 22px 3px 8px;
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23666'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 6px center;
-  transition: border-color .15s;
+  background:var(--bg2); border:1px solid var(--border-hi); border-radius:3px;
+  color:var(--text-hi); font-family:'DM Mono',monospace; font-size:10px;
+  padding:3px 22px 3px 8px; cursor:pointer; appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23666'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 6px center;
 }
-.pro-select:focus { outline: none; border-color: var(--gold); }
+.pro-select:focus { outline:none; border-color:var(--gold); }
 
 .pro-range {
-  -webkit-appearance: none;
-  width: 90px;
-  height: 2px;
-  background: var(--bg3);
-  border-radius: 1px;
-  outline: none;
-  cursor: pointer;
+  -webkit-appearance:none; appearance:none; width:70px; height:2px;
+  background:var(--bg3); border-radius:1px; outline:none; cursor:pointer;
 }
 .pro-range::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: var(--gold);
-  cursor: pointer;
-  box-shadow: 0 0 0 2px rgba(240,168,64,0.2);
+  -webkit-appearance:none; appearance:none; width:10px; height:10px; border-radius:50%;
+  background:var(--gold); cursor:pointer; box-shadow:0 0 0 2px rgba(240,168,64,0.2);
 }
-.pro-range-val { font-size: 10px; color: var(--gold); min-width: 14px; }
+.pro-range-val { font-size:10px; color:var(--gold); min-width:14px; }
 
-.pro-toggle {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  color: var(--text-mid);
-  font-size: 10px;
-}
-.pro-toggle input { display: none; }
-.pro-toggle-track {
-  width: 26px; height: 13px;
-  background: var(--bg3);
-  border: 1px solid var(--border-hi);
-  border-radius: 7px;
-  position: relative;
-  transition: background .15s, border-color .15s;
-}
-.pro-toggle input:checked + .pro-toggle-track {
-  background: var(--gold-dim);
-  border-color: rgba(240,168,64,0.4);
-}
-.pro-toggle-thumb {
-  position: absolute;
-  top: 1px; left: 1px;
-  width: 9px; height: 9px;
-  border-radius: 50%;
-  background: var(--text-lo);
-  transition: transform .15s, background .15s;
-}
-.pro-toggle input:checked + .pro-toggle-track + .pro-toggle-thumb {
-  transform: translateX(13px);
-  background: var(--gold);
-}
+.pro-toggle { position:relative; display:inline-flex; align-items:center; gap:5px; cursor:pointer; color:var(--text-mid); font-size:10px; }
+.pro-toggle input { display:none; }
+.pro-toggle-track { width:24px; height:12px; background:var(--bg3); border:1px solid var(--border-hi); border-radius:6px; position:relative; transition:background .15s; }
+.pro-toggle input:checked + .pro-toggle-track { background:var(--gold-dim,rgba(240,168,64,0.18)); border-color:rgba(240,168,64,0.4); }
+.pro-toggle-thumb { position:absolute; top:1px; left:1px; width:8px; height:8px; border-radius:50%; background:var(--text-lo); transition:transform .15s,background .15s; }
+.pro-toggle input:checked + .pro-toggle-track + .pro-toggle-thumb { transform:translateX(12px); background:var(--gold); }
 
-/* Session input + button */
 .pro-input {
-  background: var(--bg2);
-  border: 1px solid var(--border-hi);
-  border-radius: 3px;
-  color: var(--text-hi);
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  padding: 3px 8px;
-  width: 130px;
-  outline: none;
-  transition: border-color .15s;
+  background:var(--bg2); border:1px solid var(--border-hi); border-radius:3px;
+  color:var(--text-hi); font-family:'DM Mono',monospace; font-size:10px;
+  padding:3px 8px; width:130px; outline:none; transition:border-color .15s;
 }
-.pro-input::placeholder { color: var(--text-lo); }
-.pro-input:focus { border-color: var(--purple); }
-.pro-input:disabled { opacity: 0.4; cursor: not-allowed; }
+.pro-input::placeholder { color:var(--text-lo); }
+.pro-input:focus { border-color:var(--purple); }
+.pro-input:disabled { opacity:.4; cursor:not-allowed; }
 
 .pro-btn {
-  background: var(--bg2);
-  border: 1px solid var(--border-hi);
-  border-radius: 3px;
-  color: var(--text-mid);
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  padding: 3px 10px;
-  cursor: pointer;
-  transition: background .15s, border-color .15s, color .15s;
+  background:var(--bg2); border:1px solid var(--border-hi); border-radius:3px;
+  color:var(--text-mid); font-family:'DM Mono',monospace; font-size:10px;
+  padding:3px 10px; cursor:pointer; transition:background .15s,border-color .15s,color .15s;
 }
-.pro-btn:hover { border-color: var(--purple); color: var(--purple-bright); }
-.pro-btn.recording {
-  background: rgba(224,80,96,0.12);
-  border-color: rgba(224,80,96,0.4);
-  color: var(--red);
-}
-
-#status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text-lo); flex-shrink: 0; }
-#status-dot.on { background: var(--green); box-shadow: 0 0 5px rgba(80,216,144,0.6); }
-#status-text { font-size: 9px; letter-spacing: .5px; color: var(--text-lo); }
-#status-text.on { color: var(--green); }
+.pro-btn:hover { border-color:var(--purple); color:var(--purple-bright); }
+.pro-btn.recording { background:rgba(224,80,96,0.12); border-color:rgba(224,80,96,0.4); color:var(--red); }
 </style>
 </head>
 <body>
 
-<!-- Titlebar -->
 <div id="titlebar">
   <div id="logo">
-    <div id="logo-mark">
-      <span></span><span></span><span></span><span></span>
-    </div>
-    <div>
-      <span id="logo-text">RTA</span>
-      <span id="logo-sub">&nbsp;Pro·64</span>
-    </div>
+    <div id="logo-mark"><span></span><span></span><span></span><span></span></div>
+    <div><span id="logo-text">RTA</span><span id="logo-sub">&nbsp;Pro·64</span></div>
   </div>
-
   <div id="tabs">
     <div class="tab active" data-tab="spectrum">Spectrum</div>
     <div class="tab" data-tab="history">History</div>
   </div>
-
   <div id="readout">
     <span id="freq-read">— Hz</span>
     <span class="read-sep">/</span>
@@ -492,175 +227,85 @@ body {
   </div>
 </div>
 
-<!-- Sub-header -->
 <div id="subheader">
-  <div class="chip lit" id="mode-chip">PEAK</div>
-  <div class="chip">64 BANDS</div>
+  <div class="chip lit">64 BANDS</div>
   <div class="chip">SR 44100 Hz</div>
-  <div class="chip" id="session-chip" style="display:none"></div>
+  <div class="chip c-chip" id="session-chip" style="display:none"></div>
   <div class="chip" id="fps-chip">—</div>
   <div id="status-dot"></div>
-  <span id="status-text">SIMULATED</span>
+  <span id="status-text">WAITING</span>
 </div>
 
-<!-- Spectrum view -->
 <div id="spectrum-view">
-  <div id="display">
-    <canvas id="rta-canvas"></canvas>
-    <div id="meter-sidebar">
-      <div id="meter-label-top">LVL</div>
-      <canvas id="meter-canvas" width="18"></canvas>
-      <div id="meter-db">—</div>
-    </div>
+  <div id="devices-container">
+    <div id="no-devices-msg">Waiting for ESP32 devices...</div>
   </div>
-  <div id="freq-row">
-    <canvas id="freq-canvas"></canvas>
-  </div>
+  <div id="freq-row"><canvas id="freq-canvas"></canvas></div>
 </div>
 
-<!-- History panel -->
 <div id="history-panel">
   <div id="history-toolbar">
     <span id="history-title">Session History</span>
     <button id="refresh-btn">Refresh</button>
   </div>
   <div id="history-list">
-    <div id="history-empty">No sessions yet — start one from the controls below.</div>
+    <div style="color:var(--text-lo);text-align:center;margin-top:40px;font-size:11px;">No sessions yet.</div>
   </div>
 </div>
 
-<!-- Controls -->
 <div id="controls">
-  <div class="ctrl-group">
-    <span class="ctrl-label">Source</span>
-    <select class="pro-select" id="sim-mode">
-      <option value="room">Room</option>
-      <option value="pink">Pink</option>
-      <option value="white">White</option>
-      <option value="sine">Sweep</option>
-    </select>
-  </div>
-
-  <div class="ctrl-group">
-    <span class="ctrl-label">Decay</span>
-    <input type="range" class="pro-range" id="decay" min="1" max="20" value="8">
-    <span class="pro-range-val" id="decay-val">8</span>
-  </div>
-
-  <div class="ctrl-group">
-    <label class="pro-toggle">
-      <input type="checkbox" id="peak-hold" checked>
-      <div class="pro-toggle-track"></div>
-      <div class="pro-toggle-thumb"></div>
-      Peak hold
-    </label>
-  </div>
-
-  <div class="ctrl-group">
-    <label class="pro-toggle">
-      <input type="checkbox" id="show-avg">
-      <div class="pro-toggle-track"></div>
-      <div class="pro-toggle-thumb"></div>
-      Avg curve
-    </label>
-  </div>
-
-  <div class="ctrl-group">
-    <label class="pro-toggle">
-      <input type="checkbox" id="show-fill" checked>
-      <div class="pro-toggle-track"></div>
-      <div class="pro-toggle-thumb"></div>
-      Fill
-    </label>
-  </div>
-
   <div class="ctrl-group">
     <span class="ctrl-label">Session</span>
     <input type="text" class="pro-input" id="session-name" placeholder="Name this session...">
     <button class="pro-btn" id="session-btn">Start</button>
   </div>
-
   <div class="ctrl-group ml-auto">
     <div id="status-dot-ctrl" style="width:5px;height:5px;border-radius:50%;background:var(--text-lo)"></div>
-    <span id="status-text-ctrl" style="font-size:9px;letter-spacing:.5px;color:var(--text-lo)">ESP32</span>
+    <span style="font-size:9px;letter-spacing:.5px;color:var(--text-lo)" id="device-count-txt">No devices</span>
   </div>
 </div>
 
 <script>
 // ─── Config ───────────────────────────────────────────────────────────────────
-const BASE_URL  = 'http://localhost:8000';
+const BASE_URL  = location.origin;
 const API_TOKEN = 'DanMozolIsSuperCool!13';
-const WS_URL    = 'ws://localhost:8000/ws';
-
-function apiHeaders() {
-  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_TOKEN}` };
-}
+const WS_URL    = (location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws';
+function apiHeaders() { return {'Content-Type':'application/json','Authorization':`Bearer ${API_TOKEN}`}; }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const NUM_BANDS = 64;
-const DB_MIN    = -84;
-const DB_MAX    = 0;
-const DB_RANGE  = DB_MAX - DB_MIN;
-const F_MIN     = 20;
-const F_MAX     = 20000;
-
-// ─── State ────────────────────────────────────────────────────────────────────
-let bins      = new Float32Array(NUM_BANDS).fill(DB_MIN);
-let peaks     = new Float32Array(NUM_BANDS).fill(DB_MIN);
-let avgs      = new Float32Array(NUM_BANDS).fill(DB_MIN);
-let peakAge   = new Uint16Array(NUM_BANDS);
-let dbLevel   = DB_MIN;
-let meterPeak = DB_MIN;
-let meterAge  = 0;
-let hoverBand = -1;
-let simPhase  = 0;
-let frameCount = 0, fps = 0, lastFpsTime = performance.now();
-let connected = false;
-let activeSession = null;
+const NUM_BANDS = 64, DB_MIN = -84, DB_MAX = 0, DB_RANGE = 36, F_MIN = 20, F_MAX = 20000;
+// DB_RANGE is display range (show -84 to -48 compressed) — use full for math
+const DB_DISPLAY_MIN = -84, DB_DISPLAY_RANGE = DB_MAX - DB_DISPLAY_MIN;
 const AVG_ALPHA = 0.12;
 
-// ─── Settings ─────────────────────────────────────────────────────────────────
-const s = {
-  get decay()    { return +document.getElementById('decay').value; },
-  get peakHold() { return document.getElementById('peak-hold').checked; },
-  get showAvg()  { return document.getElementById('show-avg').checked; },
-  get showFill() { return document.getElementById('show-fill').checked; },
-  get simMode()  { return document.getElementById('sim-mode').value; },
-};
-
-// ─── Canvases ─────────────────────────────────────────────────────────────────
-const rtaCanvas   = document.getElementById('rta-canvas');
-const meterCanvas = document.getElementById('meter-canvas');
-const freqCanvas  = document.getElementById('freq-canvas');
-const rtaCtx      = rtaCanvas.getContext('2d');
-const meterCtx    = meterCanvas.getContext('2d');
-const freqCtx     = freqCanvas.getContext('2d');
-
-function scaleCanvas(canvas, w, h) {
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width  = w * dpr;
-  canvas.height = h * dpr;
-  canvas.style.width  = w + 'px';
-  canvas.style.height = h + 'px';
-  canvas.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
-}
-
-function resize() {
-  scaleCanvas(rtaCanvas,   rtaCanvas.offsetWidth,   rtaCanvas.offsetHeight);
-  scaleCanvas(meterCanvas, meterCanvas.offsetWidth,  meterCanvas.offsetHeight);
-  scaleCanvas(freqCanvas,  freqCanvas.offsetWidth,   freqCanvas.offsetHeight);
-  drawFreqAxis();
-}
-window.addEventListener('resize', resize);
-new ResizeObserver(resize).observe(document.body);
+const DEVICE_PALETTE = [
+  { line:'rgba(190,145,255,0.90)', fill0:'rgba(160,110,240,0.75)', fill1:'rgba(60,30,130,0.10)', dot:'#b899f0' },
+  { line:'rgba(64,208,232,0.90)',  fill0:'rgba(40,185,210,0.70)',  fill1:'rgba(20,80,120,0.10)', dot:'#40d0e8' },
+  { line:'rgba(80,216,144,0.90)',  fill0:'rgba(60,195,125,0.70)',  fill1:'rgba(20,90,60,0.10)',  dot:'#50d890' },
+  { line:'rgba(240,168,64,0.90)',  fill0:'rgba(220,148,44,0.70)',  fill1:'rgba(100,60,10,0.10)', dot:'#f0a840' },
+];
 
 // ─── Freq helpers ─────────────────────────────────────────────────────────────
-function bandFreq(b)       { return F_MIN * Math.pow(F_MAX / F_MIN, b / NUM_BANDS); }
-function bandCenterFreq(b) { return F_MIN * Math.pow(F_MAX / F_MIN, (b + 0.5) / NUM_BANDS); }
-function freqToX(f, w)     { return (Math.log10(f / F_MIN) / Math.log10(F_MAX / F_MIN)) * w; }
-function freqLabel(f)      { return f >= 1000 ? (f/1000|0) + 'k' : Math.round(f).toString(); }
+const bandFreq      = b => F_MIN * Math.pow(F_MAX / F_MIN, b / NUM_BANDS);
+const bandCenterFreq= b => F_MIN * Math.pow(F_MAX / F_MIN, (b + 0.5) / NUM_BANDS);
+const freqToX       = (f, w) => (Math.log10(f / F_MIN) / Math.log10(F_MAX / F_MIN)) * w;
+const freqLabel     = f => f >= 1000 ? (f/1000|0)+'k' : Math.round(f).toString();
+const dbToY         = (db, h) => h * (1 - (db - DB_DISPLAY_MIN) / DB_DISPLAY_RANGE);
+const FREQ_LABELS   = [20,50,100,200,500,1000,2000,5000,10000,20000];
+const DB_GRID       = [0,-12,-24,-36,-48,-60,-72,-84];
+const DB_GRID_HI    = new Set([0,-12,-24,-36,-48]);
 
-const FREQ_LABELS = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
+// ─── Canvas helpers ───────────────────────────────────────────────────────────
+function scaleCanvas(canvas, w, h) {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = w * dpr; canvas.height = h * dpr;
+  canvas.style.width = w+'px'; canvas.style.height = h+'px';
+  canvas.getContext('2d').setTransform(dpr,0,0,dpr,0,0);
+}
+
+// ─── Shared freq axis canvas ──────────────────────────────────────────────────
+const freqCanvas = document.getElementById('freq-canvas');
+const freqCtx    = freqCanvas.getContext('2d');
 
 function drawFreqAxis() {
   const w = freqCanvas.offsetWidth, h = freqCanvas.offsetHeight;
@@ -668,387 +313,454 @@ function drawFreqAxis() {
   freqCtx.font = '9px DM Mono';
   for (const f of FREQ_LABELS) {
     const x = freqToX(f, w);
-    // align left for 20 Hz so it isn't clipped, right for 20kHz
-    freqCtx.textAlign = f === 20 ? 'left' : f === 20000 ? 'right' : 'center';
     freqCtx.fillStyle = 'rgba(255,255,255,0.08)';
     freqCtx.fillRect(x - 0.5, 0, 1, 4);
+    freqCtx.textAlign = f === 20 ? 'left' : f === 20000 ? 'right' : 'center';
     freqCtx.fillStyle = '#52505c';
     freqCtx.fillText(freqLabel(f), x, h - 2);
   }
 }
 
-// ─── RTA draw ─────────────────────────────────────────────────────────────────
-const DB_GRID    = [0, -6, -12, -18, -24, -36, -48, -60, -72, -84];
-const DB_GRID_HI = new Set([0, -12, -24, -36, -48]);
-function dbToY(db, h) { return h * (1 - (db - DB_MIN) / DB_RANGE); }
+// ─── DeviceView class ─────────────────────────────────────────────────────────
+class DeviceView {
+  constructor(deviceId, colorIdx) {
+    this.id       = deviceId;
+    this.color    = DEVICE_PALETTE[colorIdx % DEVICE_PALETTE.length];
+    this.bins     = new Float32Array(NUM_BANDS).fill(DB_DISPLAY_MIN);
+    this.peaks    = new Float32Array(NUM_BANDS).fill(DB_DISPLAY_MIN);
+    this.avgs     = new Float32Array(NUM_BANDS).fill(DB_DISPLAY_MIN);
+    this.peakAge  = new Uint16Array(NUM_BANDS);
+    this.dbLevel  = DB_DISPLAY_MIN;
+    this.meterPeak= DB_DISPLAY_MIN;
+    this.meterAge = 0;
+    this.hoverBand= -1;
+    this.cfg = { decay:8, peakHold:true, showAvg:false, showFill:true };
 
-function drawRTA() {
-  const w = rtaCanvas.offsetWidth, h = rtaCanvas.offsetHeight;
-  rtaCtx.clearRect(0, 0, w, h);
-
-  for (const f of FREQ_LABELS) {
-    const x = freqToX(f, w);
-    rtaCtx.strokeStyle = 'rgba(255,255,255,0.03)';
-    rtaCtx.lineWidth = 1;
-    rtaCtx.beginPath(); rtaCtx.moveTo(x, 0); rtaCtx.lineTo(x, h); rtaCtx.stroke();
+    this.el = this._buildDOM();
+    this.rtaCanvas   = this.el.querySelector('.panel-rta');
+    this.meterCanvas = this.el.querySelector('.panel-meter-canvas');
+    this.rtaCtx      = this.rtaCanvas.getContext('2d');
+    this.meterCtx    = this.meterCanvas.getContext('2d');
+    this._bindEvents();
   }
 
-  for (const db of DB_GRID) {
-    const y  = Math.round(dbToY(db, h)) + 0.5;
-    const hi = DB_GRID_HI.has(db);
-    rtaCtx.strokeStyle = hi ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.03)';
-    rtaCtx.lineWidth = 1;
-    rtaCtx.beginPath(); rtaCtx.moveTo(0, y); rtaCtx.lineTo(w, y); rtaCtx.stroke();
-    rtaCtx.font = '9px DM Mono';
-    rtaCtx.textAlign = 'left';
-    rtaCtx.fillStyle = hi ? '#52505c' : '#38363f';
-    if (db < DB_MAX) rtaCtx.fillText(db, 4, y - 2);
+  _buildDOM() {
+    const el = document.createElement('div');
+    el.className = 'device-panel';
+    el.id = 'panel-' + this.id;
+    el.innerHTML = `
+      <div class="panel-header">
+        <div class="panel-dot" style="background:${this.color.dot}"></div>
+        <span class="panel-label">${this.id}</span>
+
+        <div class="panel-ctrl-group">
+          <span class="panel-ctrl-label">Decay</span>
+          <input type="range" class="pro-range" data-c="decay" min="1" max="20" value="8" style="width:60px">
+          <span class="pro-range-val decay-val">8</span>
+        </div>
+
+        <div class="panel-ctrl-group">
+          <label class="pro-toggle">
+            <input type="checkbox" data-c="peakHold" checked>
+            <div class="pro-toggle-track"></div><div class="pro-toggle-thumb"></div>
+            Peak
+          </label>
+        </div>
+
+        <div class="panel-ctrl-group">
+          <label class="pro-toggle">
+            <input type="checkbox" data-c="showAvg">
+            <div class="pro-toggle-track"></div><div class="pro-toggle-thumb"></div>
+            Avg
+          </label>
+        </div>
+
+        <div class="panel-ctrl-group">
+          <label class="pro-toggle">
+            <input type="checkbox" data-c="showFill" checked>
+            <div class="pro-toggle-track"></div><div class="pro-toggle-thumb"></div>
+            Fill
+          </label>
+        </div>
+
+        <span class="panel-db">— dBfs</span>
+      </div>
+      <div class="panel-display">
+        <canvas class="panel-rta"></canvas>
+        <div class="panel-meter">
+          <div class="panel-meter-label">LVL</div>
+          <canvas class="panel-meter-canvas" width="14"></canvas>
+          <div class="panel-meter-db">—</div>
+        </div>
+      </div>
+    `;
+    return el;
   }
 
-  const bandX     = b => freqToX(bandFreq(b),       w);
-  const bandCX    = b => freqToX(bandCenterFreq(b), w);
-  const bandRight = b => freqToX(bandFreq(b + 1),   w);
-  const GAP_PX    = 0.8;
+  _bindEvents() {
+    this.el.querySelector('[data-c="decay"]').addEventListener('input', e => {
+      this.cfg.decay = +e.target.value;
+      this.el.querySelector('.decay-val').textContent = e.target.value;
+    });
+    this.el.querySelector('[data-c="peakHold"]').addEventListener('change', e => {
+      this.cfg.peakHold = e.target.checked;
+      if (!e.target.checked) { this.peaks.fill(DB_DISPLAY_MIN); this.meterPeak = DB_DISPLAY_MIN; }
+    });
+    this.el.querySelector('[data-c="showAvg"]').addEventListener('change', e => { this.cfg.showAvg = e.target.checked; });
+    this.el.querySelector('[data-c="showFill"]').addEventListener('change', e => { this.cfg.showFill = e.target.checked; });
 
-  if (s.showFill) {
-    rtaCtx.beginPath();
-    for (let b = 0; b < NUM_BANDS; b++) {
-      const cx = bandCX(b), y = dbToY(bins[b], h);
-      b === 0 ? rtaCtx.moveTo(cx, y) : rtaCtx.lineTo(cx, y);
-    }
-    rtaCtx.lineTo(w, h); rtaCtx.lineTo(0, h); rtaCtx.closePath();
-    const fillGrad = rtaCtx.createLinearGradient(0, 0, 0, h);
-    fillGrad.addColorStop(0,    'rgba(160,110,240,0.82)');
-    fillGrad.addColorStop(0.35, 'rgba(130,80,210,0.60)');
-    fillGrad.addColorStop(0.75, 'rgba(90,50,170,0.35)');
-    fillGrad.addColorStop(1,    'rgba(60,30,130,0.10)');
-    rtaCtx.fillStyle = fillGrad;
-    rtaCtx.fill();
-
-    rtaCtx.beginPath();
-    for (let b = 0; b < NUM_BANDS; b++) {
-      const cx = bandCX(b), y = dbToY(bins[b], h);
-      b === 0 ? rtaCtx.moveTo(cx, y) : rtaCtx.lineTo(cx, y);
-    }
-    rtaCtx.strokeStyle = 'rgba(190,145,255,0.90)';
-    rtaCtx.lineWidth = 1.5; rtaCtx.lineJoin = 'round'; rtaCtx.stroke();
-  } else {
-    for (let b = 0; b < NUM_BANDS; b++) {
-      const x = bandX(b) + GAP_PX, bw = Math.max(1, bandRight(b) - bandX(b) - GAP_PX * 2);
-      const yTop = dbToY(bins[b], h);
-      const grad = rtaCtx.createLinearGradient(0, yTop, 0, h);
-      grad.addColorStop(0, 'rgba(180,130,255,0.85)');
-      grad.addColorStop(1, 'rgba(80,50,160,0.30)');
-      rtaCtx.fillStyle = grad;
-      rtaCtx.fillRect(x, yTop, bw, h - yTop);
-    }
-  }
-
-  if (s.showAvg) {
-    rtaCtx.beginPath();
-    for (let b = 0; b < NUM_BANDS; b++) {
-      const cx = bandCX(b), y = dbToY(avgs[b], h);
-      b === 0 ? rtaCtx.moveTo(cx, y) : rtaCtx.lineTo(cx, y);
-    }
-    rtaCtx.strokeStyle = 'rgba(255,255,255,0.92)';
-    rtaCtx.lineWidth = 2.5; rtaCtx.lineJoin = 'round'; rtaCtx.stroke();
-  }
-
-  if (s.peakHold) {
-    for (let b = 0; b < NUM_BANDS; b++) {
-      if (peaks[b] <= DB_MIN + 1) continue;
-      const cx = bandCX(b), bw = Math.max(1, bandRight(b) - bandX(b) - GAP_PX * 2);
-      const yPk = dbToY(peaks[b], h);
-      const alpha = peakAge[b] < 30 ? 1 : Math.max(0, 1 - (peakAge[b] - 30) / 60);
-      rtaCtx.fillStyle = `rgba(240,168,64,${alpha * 0.9})`;
-      rtaCtx.fillRect(cx - bw / 2, yPk - 1, bw, 2);
-    }
-  }
-
-  if (hoverBand >= 0) {
-    const cx = bandCX(hoverBand), hbw = Math.max(2, bandRight(hoverBand) - bandX(hoverBand));
-    const db = bins[hoverBand], yCurve = dbToY(db, h);
-    rtaCtx.strokeStyle = 'rgba(240,168,64,0.12)';
-    rtaCtx.lineWidth = hbw;
-    rtaCtx.beginPath(); rtaCtx.moveTo(cx, 0); rtaCtx.lineTo(cx, h); rtaCtx.stroke();
-    rtaCtx.strokeStyle = 'rgba(240,168,64,0.22)';
-    rtaCtx.lineWidth = 1; rtaCtx.setLineDash([3, 4]);
-    rtaCtx.beginPath(); rtaCtx.moveTo(0, yCurve); rtaCtx.lineTo(w, yCurve); rtaCtx.stroke();
-    rtaCtx.setLineDash([]);
-    rtaCtx.beginPath(); rtaCtx.arc(cx, yCurve, 4, 0, Math.PI * 2);
-    rtaCtx.fillStyle = '#f0a840'; rtaCtx.fill();
-    rtaCtx.strokeStyle = '#1a1208'; rtaCtx.lineWidth = 1.5; rtaCtx.stroke();
-
-    const TAG_H = 30, TAG_GAP = 10;
-    let tagBottom = yCurve - TAG_GAP, tagTop = tagBottom - TAG_H;
-    if (tagTop < 2) { tagTop = 2; tagBottom = tagTop + TAG_H; }
-    rtaCtx.strokeStyle = 'rgba(240,168,64,0.55)'; rtaCtx.lineWidth = 1;
-    rtaCtx.beginPath(); rtaCtx.moveTo(cx, yCurve - 4); rtaCtx.lineTo(cx, tagBottom); rtaCtx.stroke();
-
-    const freq = bandCenterFreq(hoverBand);
-    const fStr = freq < 1000 ? Math.round(freq) + ' Hz' : (freq / 1000).toFixed(1) + ' kHz';
-    const dbStr = db.toFixed(1) + ' dB';
-    rtaCtx.font = 'bold 9px DM Mono';
-    const fw = Math.max(rtaCtx.measureText(fStr).width, rtaCtx.measureText(dbStr).width);
-    const tw = fw + 14;
-    let lx = Math.max(2, Math.min(w - tw - 2, cx - tw / 2));
-    rtaCtx.fillStyle = '#f0a840';
-    rtaCtx.beginPath(); rtaCtx.roundRect(lx, tagTop, tw, TAG_H, 3); rtaCtx.fill();
-    rtaCtx.fillStyle = '#1a1208'; rtaCtx.textAlign = 'center'; rtaCtx.font = 'bold 9px DM Mono';
-    rtaCtx.fillText(fStr, lx + tw / 2, tagTop + 11);
-    rtaCtx.font = '9px DM Mono';
-    rtaCtx.fillText(dbStr, lx + tw / 2, tagTop + 23);
-  }
-}
-
-// ─── Level meter ──────────────────────────────────────────────────────────────
-function drawMeter() {
-  const w = meterCanvas.offsetWidth, h = meterCanvas.offsetHeight;
-  meterCtx.clearRect(0, 0, w, h);
-  const segH = 3, segGap = 1, segTotal = segH + segGap;
-  const numSegs = Math.floor(h / segTotal);
-  for (let i = 0; i < numSegs; i++) {
-    const db = DB_MAX - (i / numSegs) * DB_RANGE;
-    const active = db <= dbLevel;
-    const isPeak = s.peakHold && Math.abs(db - meterPeak) < (DB_RANGE / numSegs) * 2;
-    let color;
-    if (isPeak)       color = '#f0a840';
-    else if (active)  color = db > -6 ? '#e05060' : db > -18 ? '#e08840' : db > -36 ? '#9a7fd4' : '#6a50a4';
-    else              color = '#1e1e26';
-    meterCtx.fillStyle = color;
-    meterCtx.fillRect(0, i * segTotal, w, segH);
-  }
-}
-
-// ─── Simulation ───────────────────────────────────────────────────────────────
-function generateSim() {
-  const out = new Float32Array(NUM_BANDS);
-  simPhase += 0.04;
-  for (let b = 0; b < NUM_BANDS; b++) {
-    const f = bandCenterFreq(b);
-    let level;
-    switch (s.simMode) {
-      case 'pink':  level = -22 - (b / NUM_BANDS) * 28 + (Math.random() - 0.5) * 7; break;
-      case 'white': level = -36 + (Math.random() - 0.5) * 14; break;
-      case 'sine': {
-        const sweepBand = ((simPhase * 0.5) % 1) * NUM_BANDS;
-        level = -18 - Math.abs(b - sweepBand) * 3 + (Math.random() - 0.5) * 3;
-        break;
+    this.rtaCanvas.addEventListener('mousemove', e => {
+      const rect = this.rtaCanvas.getBoundingClientRect();
+      const xFrac = (e.clientX - rect.left) / this.rtaCanvas.offsetWidth;
+      const freq  = F_MIN * Math.pow(F_MAX / F_MIN, xFrac);
+      const b     = Math.floor(Math.log(freq / F_MIN) / Math.log(F_MAX / F_MIN) * NUM_BANDS);
+      this.hoverBand = (b >= 0 && b < NUM_BANDS) ? b : -1;
+      if (this.hoverBand >= 0) {
+        const f = bandCenterFreq(this.hoverBand);
+        document.getElementById('freq-read').textContent = f < 1000 ? Math.round(f)+' Hz' : (f/1000).toFixed(1)+' kHz';
+        document.getElementById('db-read').textContent   = this.bins[this.hoverBand].toFixed(1)+' dBfs';
       }
-      default: {
-        const logF = Math.log10(f / 20) / Math.log10(1000);
-        level = -26 - logF * 10 + Math.sin(b * 0.45 + simPhase * 0.25) * 4 + (Math.random() - 0.5) * 5;
-        level += (b > 38 && b < 52) ? -5 : 0;
+    });
+    this.rtaCanvas.addEventListener('mouseleave', () => { this.hoverBand = -1; });
+  }
+
+  resize() {
+    scaleCanvas(this.rtaCanvas,   this.rtaCanvas.offsetWidth,   this.rtaCanvas.offsetHeight);
+    scaleCanvas(this.meterCanvas, this.meterCanvas.offsetWidth, this.meterCanvas.offsetHeight);
+  }
+
+  applyBins(newBins, newDb) {
+    const decay = this.cfg.decay * 0.5;
+    for (let b = 0; b < NUM_BANDS; b++) {
+      this.bins[b] = Math.max(newBins[b], this.bins[b] - decay);
+      this.avgs[b] = this.avgs[b] * (1 - AVG_ALPHA) + newBins[b] * AVG_ALPHA;
+      if (newBins[b] >= this.peaks[b]) { this.peaks[b] = newBins[b]; this.peakAge[b] = 0; }
+      else { this.peakAge[b]++; if (this.peakAge[b] > 60) this.peaks[b] -= 0.25; }
+    }
+    this.dbLevel = Math.max(newDb, this.dbLevel - decay * 0.5);
+    if (newDb >= this.meterPeak) { this.meterPeak = newDb; this.meterAge = 0; }
+    else { this.meterAge++; if (this.meterAge > 80) this.meterPeak -= 0.5; }
+    this.el.querySelector('.panel-db').textContent = newDb.toFixed(1)+' dBfs';
+    this.el.querySelector('.panel-meter-db').textContent = this.dbLevel.toFixed(1);
+  }
+
+  drawRTA() {
+    const ctx = this.rtaCtx;
+    const w = this.rtaCanvas.offsetWidth, h = this.rtaCanvas.offsetHeight;
+    ctx.clearRect(0, 0, w, h);
+
+    // Grid
+    for (const f of FREQ_LABELS) {
+      const x = freqToX(f, w);
+      ctx.strokeStyle = 'rgba(255,255,255,0.025)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
+    }
+    for (const db of DB_GRID) {
+      const y = Math.round(dbToY(db, h)) + 0.5;
+      const hi = DB_GRID_HI.has(db);
+      ctx.strokeStyle = hi ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.03)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+      ctx.font = '9px DM Mono'; ctx.textAlign = 'left';
+      ctx.fillStyle = hi ? '#52505c' : '#38363f';
+      if (db < DB_MAX) ctx.fillText(db, 4, y - 2);
+    }
+
+    const bX  = b => freqToX(bandFreq(b),        w);
+    const bCX = b => freqToX(bandCenterFreq(b),  w);
+    const bRX = b => freqToX(bandFreq(b + 1),    w);
+    const GAP = 0.8;
+
+    if (this.cfg.showFill) {
+      ctx.beginPath();
+      for (let b = 0; b < NUM_BANDS; b++) {
+        const cx = bCX(b), y = dbToY(this.bins[b], h);
+        b === 0 ? ctx.moveTo(cx, y) : ctx.lineTo(cx, y);
+      }
+      ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0,    this.color.fill0);
+      g.addColorStop(0.7,  this.color.fill0.replace(/[\d.]+\)$/, '0.25)'));
+      g.addColorStop(1,    this.color.fill1);
+      ctx.fillStyle = g; ctx.fill();
+
+      ctx.beginPath();
+      for (let b = 0; b < NUM_BANDS; b++) {
+        const cx = bCX(b), y = dbToY(this.bins[b], h);
+        b === 0 ? ctx.moveTo(cx, y) : ctx.lineTo(cx, y);
+      }
+      ctx.strokeStyle = this.color.line; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.stroke();
+    } else {
+      for (let b = 0; b < NUM_BANDS; b++) {
+        const x = bX(b) + GAP, bw = Math.max(1, bRX(b) - bX(b) - GAP*2);
+        const yTop = dbToY(this.bins[b], h);
+        const g = ctx.createLinearGradient(0, yTop, 0, h);
+        g.addColorStop(0, this.color.fill0); g.addColorStop(1, this.color.fill1);
+        ctx.fillStyle = g; ctx.fillRect(x, yTop, bw, h - yTop);
       }
     }
-    out[b] = Math.max(DB_MIN, Math.min(-4, level));
+
+    if (this.cfg.showAvg) {
+      ctx.beginPath();
+      for (let b = 0; b < NUM_BANDS; b++) {
+        const cx = bCX(b), y = dbToY(this.avgs[b], h);
+        b === 0 ? ctx.moveTo(cx, y) : ctx.lineTo(cx, y);
+      }
+      ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.stroke();
+    }
+
+    if (this.cfg.peakHold) {
+      for (let b = 0; b < NUM_BANDS; b++) {
+        if (this.peaks[b] <= DB_DISPLAY_MIN + 1) continue;
+        const cx = bCX(b), bw = Math.max(1, bRX(b) - bX(b) - GAP*2);
+        const yPk = dbToY(this.peaks[b], h);
+        const alpha = this.peakAge[b] < 30 ? 1 : Math.max(0, 1-(this.peakAge[b]-30)/60);
+        ctx.fillStyle = `rgba(240,168,64,${alpha*0.9})`;
+        ctx.fillRect(cx - bw/2, yPk - 1, bw, 2);
+      }
+    }
+
+    if (this.hoverBand >= 0) {
+      const cx = bCX(this.hoverBand), hbw = Math.max(2, bRX(this.hoverBand) - bX(this.hoverBand));
+      const db = this.bins[this.hoverBand], yCurve = dbToY(db, h);
+      ctx.strokeStyle = 'rgba(240,168,64,0.10)'; ctx.lineWidth = hbw;
+      ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,h); ctx.stroke();
+      ctx.strokeStyle = 'rgba(240,168,64,0.20)'; ctx.lineWidth = 1; ctx.setLineDash([3,4]);
+      ctx.beginPath(); ctx.moveTo(0,yCurve); ctx.lineTo(w,yCurve); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.arc(cx, yCurve, 3, 0, Math.PI*2);
+      ctx.fillStyle = '#f0a840'; ctx.fill();
+
+      const freq  = bandCenterFreq(this.hoverBand);
+      const fStr  = freq < 1000 ? Math.round(freq)+' Hz' : (freq/1000).toFixed(1)+' kHz';
+      const dbStr = db.toFixed(1)+' dB';
+      const TAG_H = 28, TAG_GAP = 8;
+      let tagTop = yCurve - TAG_GAP - TAG_H;
+      if (tagTop < 2) tagTop = 2;
+      ctx.strokeStyle = 'rgba(240,168,64,0.5)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(cx, yCurve-3); ctx.lineTo(cx, tagTop+TAG_H); ctx.stroke();
+      ctx.font = 'bold 9px DM Mono';
+      const fw = Math.max(ctx.measureText(fStr).width, ctx.measureText(dbStr).width);
+      const tw = fw + 12;
+      let lx = Math.max(2, Math.min(w-tw-2, cx-tw/2));
+      ctx.fillStyle = '#f0a840';
+      ctx.beginPath(); ctx.roundRect(lx, tagTop, tw, TAG_H, 3); ctx.fill();
+      ctx.fillStyle = '#1a1208'; ctx.textAlign = 'center'; ctx.font = 'bold 9px DM Mono';
+      ctx.fillText(fStr,  lx+tw/2, tagTop+10);
+      ctx.font = '9px DM Mono';
+      ctx.fillText(dbStr, lx+tw/2, tagTop+21);
+    }
   }
-  return out;
+
+  drawMeter() {
+    const ctx = this.meterCtx;
+    const w = this.meterCanvas.offsetWidth, h = this.meterCanvas.offsetHeight;
+    ctx.clearRect(0, 0, w, h);
+    const segH = 3, segGap = 1, segTotal = segH + segGap;
+    const numSegs = Math.floor(h / segTotal);
+    for (let i = 0; i < numSegs; i++) {
+      const db = DB_MAX - (i / numSegs) * DB_DISPLAY_RANGE;
+      const active = db <= this.dbLevel;
+      const isPeak = this.cfg.peakHold && Math.abs(db - this.meterPeak) < (DB_DISPLAY_RANGE / numSegs) * 2;
+      let color;
+      if (isPeak)      color = '#f0a840';
+      else if (active) color = db > -6 ? '#e05060' : db > -18 ? '#e08840' : db > -36 ? this.color.dot : this.color.dot+'99';
+      else             color = '#1e1e26';
+      ctx.fillStyle = color; ctx.fillRect(0, i*segTotal, w, segH);
+    }
+  }
+
+  draw() { this.drawRTA(); this.drawMeter(); }
 }
 
-// ─── State update ─────────────────────────────────────────────────────────────
-function applyBins(newBins, newDb) {
-  const decayDb = s.decay * 0.5;
-  for (let b = 0; b < NUM_BANDS; b++) {
-    bins[b] = Math.max(newBins[b], bins[b] - decayDb);
-    avgs[b] = avgs[b] * (1 - AVG_ALPHA) + newBins[b] * AVG_ALPHA;
-    if (newBins[b] >= peaks[b]) { peaks[b] = newBins[b]; peakAge[b] = 0; }
-    else { peakAge[b]++; if (peakAge[b] > 60) peaks[b] -= 0.25; }
+// ─── Device registry ──────────────────────────────────────────────────────────
+const devices = new Map();
+
+function getOrCreate(deviceId) {
+  if (!devices.has(deviceId)) {
+    const noMsg = document.getElementById('no-devices-msg');
+    if (noMsg) noMsg.remove();
+
+    const view = new DeviceView(deviceId, devices.size);
+    devices.set(deviceId, view);
+    document.getElementById('devices-container').appendChild(view.el);
+    setTimeout(() => { view.resize(); resizeFreq(); }, 10);
+    updateDeviceCount();
   }
-  dbLevel = Math.max(newDb, dbLevel - decayDb * 0.5);
-  if (newDb >= meterPeak) { meterPeak = newDb; meterAge = 0; }
-  else { meterAge++; if (meterAge > 80) meterPeak -= 0.5; }
+  return devices.get(deviceId);
 }
 
-// ─── Hover ────────────────────────────────────────────────────────────────────
-rtaCanvas.addEventListener('mousemove', e => {
-  const rect  = rtaCanvas.getBoundingClientRect();
-  const xFrac = (e.clientX - rect.left) / rtaCanvas.offsetWidth;
-  const freq  = F_MIN * Math.pow(F_MAX / F_MIN, xFrac);
-  const b     = Math.floor(Math.log(freq / F_MIN) / Math.log(F_MAX / F_MIN) * NUM_BANDS);
-  hoverBand   = (b >= 0 && b < NUM_BANDS) ? b : -1;
-  if (hoverBand >= 0) {
-    const f    = bandCenterFreq(hoverBand);
-    const fStr = f < 1000 ? Math.round(f) + ' Hz' : (f / 1000).toFixed(1) + ' kHz';
-    document.getElementById('freq-read').textContent = fStr;
-    document.getElementById('db-read').textContent   = bins[hoverBand].toFixed(1) + ' dBfs';
-  }
-});
-rtaCanvas.addEventListener('mouseleave', () => { hoverBand = -1; });
+function updateDeviceCount() {
+  const n = devices.size;
+  document.getElementById('device-count-txt').textContent = n === 0 ? 'No devices' : n+' device'+(n>1?'s':'')+' live';
+  document.getElementById('status-dot-ctrl').style.background = n > 0 ? 'var(--green)' : 'var(--text-lo)';
+}
 
-// ─── Controls ─────────────────────────────────────────────────────────────────
-document.getElementById('decay').addEventListener('input', e => {
-  document.getElementById('decay-val').textContent = e.target.value;
-});
-document.getElementById('peak-hold').addEventListener('change', () => {
-  if (!document.getElementById('peak-hold').checked) { peaks.fill(DB_MIN); meterPeak = DB_MIN; }
-});
+// ─── Resize ───────────────────────────────────────────────────────────────────
+function resizeAll() {
+  devices.forEach(v => v.resize());
+  resizeFreq();
+}
+
+function resizeFreq() {
+  scaleCanvas(freqCanvas, freqCanvas.offsetWidth, freqCanvas.offsetHeight);
+  drawFreqAxis();
+}
+
+window.addEventListener('resize', resizeAll);
+new ResizeObserver(resizeAll).observe(document.body);
 
 // ─── WebSocket ────────────────────────────────────────────────────────────────
-let ws, wsRetry;
+let ws, wsRetry, connected = false;
+
 function connectWS() {
   ws = new WebSocket(WS_URL);
   ws.onopen = () => {
-    connected = true; setConnected(true); clearTimeout(wsRetry);
+    connected = true;
+    document.getElementById('status-dot').className = 'on';
+    document.getElementById('status-text').className = 'on';
+    document.getElementById('status-text').textContent = 'CONNECTED';
+    clearTimeout(wsRetry);
     setInterval(() => { if (ws.readyState === 1) ws.send('ping'); }, 15000);
   };
-  ws.onmessage = e => { try { const d = JSON.parse(e.data); applyBins(d.bins, d.db_level); } catch {} };
-  ws.onclose = ws.onerror = () => { connected = false; setConnected(false); wsRetry = setTimeout(connectWS, 3000); };
-}
-function setConnected(on) {
-  document.getElementById('status-dot').className = on ? 'on' : '';
-  document.getElementById('status-text').className = on ? 'on' : '';
-  document.getElementById('status-text').textContent = on ? 'CONNECTED' : 'SIMULATED';
-  document.getElementById('status-dot-ctrl').style.background = on ? 'var(--green)' : 'var(--text-lo)';
+  ws.onmessage = e => {
+    try {
+      const d = JSON.parse(e.data);
+      getOrCreate(d.device_id).applyBins(d.bins, d.db_level);
+    } catch {}
+  };
+  ws.onclose = ws.onerror = () => {
+    connected = false;
+    document.getElementById('status-dot').className = '';
+    document.getElementById('status-text').className = '';
+    document.getElementById('status-text').textContent = 'DISCONNECTED';
+    wsRetry = setTimeout(connectWS, 3000);
+  };
 }
 connectWS();
 
 // ─── Sessions ─────────────────────────────────────────────────────────────────
+let activeSession = null;
 const sessionBtn  = document.getElementById('session-btn');
 const sessionName = document.getElementById('session-name');
 const sessionChip = document.getElementById('session-chip');
 
 sessionBtn.addEventListener('click', async () => {
   if (activeSession) {
-    await fetch(`${BASE_URL}/sessions/${activeSession.id}/end`, {
-      method: 'PUT', headers: apiHeaders()
-    }).catch(() => {});
+    await fetch(`${BASE_URL}/sessions/${activeSession.id}/end`, { method:'PUT', headers:apiHeaders() }).catch(()=>{});
     activeSession = null;
-    sessionBtn.textContent = 'Start';
-    sessionBtn.classList.remove('recording');
-    sessionName.disabled = false;
-    sessionChip.style.display = 'none';
+    sessionBtn.textContent = 'Start'; sessionBtn.classList.remove('recording');
+    sessionName.disabled = false; sessionChip.style.display = 'none';
   } else {
     const name = sessionName.value.trim();
     if (!name) { sessionName.focus(); return; }
     try {
-      const res  = await fetch(`${BASE_URL}/sessions`, {
-        method: 'POST', headers: apiHeaders(), body: JSON.stringify({ name })
-      });
+      const res  = await fetch(`${BASE_URL}/sessions`, { method:'POST', headers:apiHeaders(), body:JSON.stringify({name}) });
       const data = await res.json();
-      activeSession = { id: data.id, name: data.name };
-      sessionBtn.textContent = 'Stop';
-      sessionBtn.classList.add('recording');
+      activeSession = { id:data.id, name:data.name };
+      sessionBtn.textContent = 'Stop'; sessionBtn.classList.add('recording');
       sessionName.disabled = true;
-      sessionChip.textContent = 'REC · ' + name;
-      sessionChip.style.display = '';
-    } catch {
-      alert('Could not reach backend — is it running?');
-    }
+      sessionChip.textContent = 'REC · '+name; sessionChip.style.display = '';
+    } catch { alert('Could not reach backend — is it running?'); }
   }
 });
 
-// ─── History panel ────────────────────────────────────────────────────────────
+// ─── History ──────────────────────────────────────────────────────────────────
 async function loadHistory() {
   const list = document.getElementById('history-list');
-  list.innerHTML = '<div id="history-empty" style="color:var(--text-lo);text-align:center;margin-top:40px;font-size:11px;">Loading...</div>';
-
+  list.innerHTML = '<div style="color:var(--text-lo);text-align:center;margin-top:40px;font-size:11px;">Loading...</div>';
   let sessions;
   try {
-    const res = await fetch(`${BASE_URL}/sessions`, { headers: apiHeaders() });
+    const res = await fetch(`${BASE_URL}/sessions`, { headers:apiHeaders() });
     sessions  = await res.json();
   } catch {
-    list.innerHTML = '<div id="history-empty" style="color:var(--red);text-align:center;margin-top:40px;font-size:11px;">Could not reach backend.</div>';
+    list.innerHTML = '<div style="color:var(--red);text-align:center;margin-top:40px;font-size:11px;">Could not reach backend.</div>';
     return;
   }
-
   if (!sessions.length) {
-    list.innerHTML = '<div id="history-empty" style="color:var(--text-lo);text-align:center;margin-top:40px;font-size:11px;">No sessions yet — start one from the controls below.</div>';
+    list.innerHTML = '<div style="color:var(--text-lo);text-align:center;margin-top:40px;font-size:11px;">No sessions yet.</div>';
     return;
   }
-
   list.innerHTML = '';
-  for (const session of sessions) {
+  for (const s of sessions) {
+    const date = new Date(s.start_time);
+    const dateStr = date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+      +' · '+date.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const duration = s.end_time ? Math.round((new Date(s.end_time)-date)/60000)+' min' : 'In progress';
     const card = document.createElement('div');
     card.className = 'session-card';
-    const date = new Date(session.start_time);
-    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      + ' · ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const duration = session.end_time
-      ? Math.round((new Date(session.end_time) - date) / 60000) + ' min'
-      : 'In progress';
-    card.innerHTML = `
-      <div class="card-header">
-        <div class="card-title">${session.name}</div>
-        <div class="card-meta">${dateStr} &nbsp;·&nbsp; ${duration}</div>
-      </div>
-      <canvas class="mini-spectrum" id="mini-${session.id}"></canvas>
-      <div class="card-stats" id="stats-${session.id}">
-        <div class="stat-item"><div class="stat-label">Readings</div><div class="stat-value">—</div></div>
-        <div class="stat-item"><div class="stat-label">Avg dB</div><div class="stat-value">—</div></div>
-      </div>
-    `;
+    card.innerHTML = `<div class="card-header"><div class="card-title">${s.name}</div><div class="card-meta">${dateStr} &nbsp;·&nbsp; ${duration}</div></div><div class="card-devices" id="cdev-${s.id}"><div style="padding:10px 14px;color:var(--text-lo);font-size:10px;">Loading devices...</div></div>`;
     list.appendChild(card);
-    loadSessionAvg(session.id);
+    loadSessionDevices(s.id, card.querySelector('.card-devices'));
   }
 }
 
-async function loadSessionAvg(id) {
+async function loadSessionDevices(sessionId, container) {
   let data;
   try {
-    const res = await fetch(`${BASE_URL}/sessions/${id}/average`, { headers: apiHeaders() });
+    const res = await fetch(`${BASE_URL}/sessions/${sessionId}/average`, { headers:apiHeaders() });
     data = await res.json();
-  } catch { return; }
+  } catch { container.innerHTML = '<div style="padding:10px 14px;color:var(--red);font-size:10px;">Error loading data.</div>'; return; }
 
-  const statsEl = document.getElementById(`stats-${id}`);
-  if (!data.avg_bins) {
-    statsEl.innerHTML = '<div class="stat-item"><div class="stat-label">Readings</div><div class="stat-value">0</div></div>';
+  if (!data.devices || !data.devices.length) {
+    container.innerHTML = '<div style="padding:10px 14px;color:var(--text-lo);font-size:10px;">No readings in this session.</div>';
     return;
   }
 
-  statsEl.innerHTML = `
-    <div class="stat-item"><div class="stat-label">Readings</div><div class="stat-value">${data.count}</div></div>
-    <div class="stat-item"><div class="stat-label">Avg dB</div><div class="stat-value">${data.avg_db} dBfs</div></div>
-    <div class="stat-item"><div class="stat-label">Peak band</div><div class="stat-value">${peakBandLabel(data.avg_bins)}</div></div>
-  `;
-
-  const canvas = document.getElementById(`mini-${id}`);
-  if (canvas) {
-    requestAnimationFrame(() => drawMiniSpectrum(canvas, data.avg_bins));
-  }
+  container.innerHTML = '';
+  data.devices.forEach((dev, i) => {
+    const color = DEVICE_PALETTE[i % DEVICE_PALETTE.length];
+    const block = document.createElement('div');
+    block.className = 'device-block';
+    const peakFreq = peakBandLabel(dev.avg_bins);
+    block.innerHTML = `
+      <div class="device-block-label">
+        <div class="device-block-dot" style="background:${color.dot}"></div>
+        ${dev.device_id}
+      </div>
+      <canvas class="mini-spectrum" id="ms-${sessionId}-${i}"></canvas>
+      <div class="device-stats">
+        <div class="stat-item"><div class="stat-label">Readings</div><div class="stat-value">${dev.count}</div></div>
+        <div class="stat-item"><div class="stat-label">Avg dB</div><div class="stat-value">${dev.avg_db} dBfs</div></div>
+        <div class="stat-item"><div class="stat-label">Peak band</div><div class="stat-value">${peakFreq}</div></div>
+      </div>
+    `;
+    container.appendChild(block);
+    requestAnimationFrame(() => drawMiniSpectrum(document.getElementById(`ms-${sessionId}-${i}`), dev.avg_bins, color));
+  });
 }
 
 function peakBandLabel(bins) {
-  const maxIdx = bins.reduce((mi, v, i, a) => v > a[mi] ? i : mi, 0);
-  const freq   = F_MIN * Math.pow(F_MAX / F_MIN, (maxIdx + 0.5) / NUM_BANDS);
-  return freq < 1000 ? Math.round(freq) + ' Hz' : (freq / 1000).toFixed(1) + ' kHz';
+  const mi = bins.reduce((mi,v,i,a) => v > a[mi] ? i : mi, 0);
+  const f  = F_MIN * Math.pow(F_MAX / F_MIN, (mi+0.5) / NUM_BANDS);
+  return f < 1000 ? Math.round(f)+' Hz' : (f/1000).toFixed(1)+' kHz';
 }
 
-function drawMiniSpectrum(canvas, avgBins) {
-  canvas.width = canvas.offsetWidth || canvas.clientWidth || 400;
+function drawMiniSpectrum(canvas, avgBins, color) {
+  canvas.width = canvas.offsetWidth || 400;
   const ctx = canvas.getContext('2d');
   const w = canvas.width, h = canvas.height;
   ctx.clearRect(0, 0, w, h);
-
-  // Filled area
   ctx.beginPath();
   for (let b = 0; b < NUM_BANDS; b++) {
-    const cx   = freqToX(F_MIN * Math.pow(F_MAX / F_MIN, (b + 0.5) / NUM_BANDS), w);
-    const norm = Math.max(0, (avgBins[b] - DB_MIN) / DB_RANGE);
-    const y    = h * (1 - norm);
-    b === 0 ? ctx.moveTo(cx, y) : ctx.lineTo(cx, y);
+    const cx   = freqToX(F_MIN * Math.pow(F_MAX/F_MIN,(b+0.5)/NUM_BANDS), w);
+    const norm = Math.max(0, (avgBins[b] - DB_DISPLAY_MIN) / DB_DISPLAY_RANGE);
+    b === 0 ? ctx.moveTo(cx, h*(1-norm)) : ctx.lineTo(cx, h*(1-norm));
   }
-  ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
-  const grad = ctx.createLinearGradient(0, 0, 0, h);
-  grad.addColorStop(0,   'rgba(150,110,230,0.75)');
-  grad.addColorStop(0.6, 'rgba(90,55,170,0.40)');
-  grad.addColorStop(1,   'rgba(60,30,120,0.10)');
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // Line
+  ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath();
+  const g = ctx.createLinearGradient(0,0,0,h);
+  g.addColorStop(0, color.fill0); g.addColorStop(1, color.fill1);
+  ctx.fillStyle = g; ctx.fill();
   ctx.beginPath();
   for (let b = 0; b < NUM_BANDS; b++) {
-    const cx   = freqToX(F_MIN * Math.pow(F_MAX / F_MIN, (b + 0.5) / NUM_BANDS), w);
-    const norm = Math.max(0, (avgBins[b] - DB_MIN) / DB_RANGE);
-    const y    = h * (1 - norm);
-    b === 0 ? ctx.moveTo(cx, y) : ctx.lineTo(cx, y);
+    const cx   = freqToX(F_MIN * Math.pow(F_MAX/F_MIN,(b+0.5)/NUM_BANDS), w);
+    const norm = Math.max(0, (avgBins[b] - DB_DISPLAY_MIN) / DB_DISPLAY_RANGE);
+    b === 0 ? ctx.moveTo(cx, h*(1-norm)) : ctx.lineTo(cx, h*(1-norm));
   }
-  ctx.strokeStyle = 'rgba(185,145,255,0.85)';
-  ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.stroke();
+  ctx.strokeStyle = color.line; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.stroke();
 }
 
-// ─── Tab switching ────────────────────────────────────────────────────────────
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1056,42 +768,39 @@ document.querySelectorAll('.tab').forEach(tab => {
     const isHistory = tab.dataset.tab === 'history';
     document.getElementById('spectrum-view').style.display = isHistory ? 'none' : 'flex';
     document.getElementById('history-panel').style.display = isHistory ? 'flex' : 'none';
-    if (isHistory) loadHistory();
-    else setTimeout(resize, 10);
+    if (isHistory) loadHistory(); else setTimeout(resizeAll, 10);
   });
 });
-
 document.getElementById('refresh-btn').addEventListener('click', loadHistory);
 
 // ─── FPS ──────────────────────────────────────────────────────────────────────
+let frameCount = 0, fps = 0, lastFpsTime = performance.now();
 function updateFps() {
   frameCount++;
   const now = performance.now();
   if (now - lastFpsTime >= 1000) {
     fps = Math.round(frameCount * 1000 / (now - lastFpsTime));
     frameCount = 0; lastFpsTime = now;
-    document.getElementById('fps-chip').textContent = fps + ' FPS';
+    document.getElementById('fps-chip').textContent = fps+' FPS';
   }
 }
 
 // ─── Render loop ──────────────────────────────────────────────────────────────
 function frame() {
-  if (!connected) {
-    const flatBins = new Float32Array(NUM_BANDS).fill(-60);
-    applyBins(flatBins, -60);
+  if (!connected && devices.size > 0) {
+    const flat = new Float32Array(NUM_BANDS).fill(-60);
+    devices.forEach(v => v.applyBins(flat, -60));
   }
-  drawRTA(); drawMeter();
-  if (hoverBand < 0) {
+  devices.forEach(v => v.draw());
+  if (devices.size === 0) {
     document.getElementById('freq-read').textContent = '— Hz';
-    document.getElementById('db-read').textContent   = dbLevel.toFixed(1) + ' dBfs';
+    document.getElementById('db-read').textContent   = '— dBfs';
   }
-  document.getElementById('meter-db').textContent = dbLevel.toFixed(1);
   updateFps();
   requestAnimationFrame(frame);
 }
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
-window.addEventListener('load', () => { setTimeout(() => { resize(); frame(); }, 60); });
+window.addEventListener('load', () => { setTimeout(() => { resizeFreq(); frame(); }, 60); });
 </script>
 </body>
 </html>

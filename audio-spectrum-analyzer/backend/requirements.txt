@@ -1,5 +1,7 @@
-fastapi
-uvicorn[standard]
-motor
-dnspython
-python-dotenv
+fastapi==0.135.2
+uvicorn[standard]==0.40.0
+motor==3.7.1
+pymongo==4.16.0
+dnspython==2.8.0
+python-dotenv==1.2.2
+pydantic==2.12.5

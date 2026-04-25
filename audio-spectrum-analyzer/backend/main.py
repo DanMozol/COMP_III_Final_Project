@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
@@ -8,6 +9,9 @@ from typing import Optional
 from bson import ObjectId
 import datetime
 import os
+import pathlib
+
+FRONTEND_DIR = pathlib.Path(__file__).parent.parent / "frontend"
 
 load_dotenv()
 
@@ -103,6 +107,14 @@ class AudioReading(BaseModel):
 
 class SessionCreate(BaseModel):
     name: str
+
+# ---------------------------------------------------------------------------
+# Frontend
+# ---------------------------------------------------------------------------
+
+@app.get("/", include_in_schema=False)
+async def serve_frontend():
+    return FileResponse(FRONTEND_DIR / "index.html")
 
 # ---------------------------------------------------------------------------
 # Routes — data ingestion
@@ -237,39 +249,44 @@ async def session_average(session_id: str, _: str = Depends(verify_token)):
 
     cursor = collection.find(
         {"timestamp": {"$gte": session["start_time"], "$lte": end_time}},
-        {"bins": 1, "db_level": 1, "_id": 0}
+        {"bins": 1, "db_level": 1, "device_id": 1, "_id": 0}
     )
     readings = await cursor.to_list(length=None)
 
     if not readings:
         return {
             "id": session_id, "name": session["name"],
-            "count": 0, "avg_db": None, "avg_bins": None,
             "start_time": session["start_time"].isoformat(),
             "end_time": end_time.isoformat(),
+            "devices": [],
         }
 
-    n          = len(readings)
-    num_bands  = len(readings[0]["bins"])
-    avg_bins   = [0.0] * num_bands
-    avg_db     = 0.0
-
+    by_device: dict = {}
     for r in readings:
-        avg_db += r["db_level"]
+        did = r.get("device_id", "unknown")
+        if did not in by_device:
+            by_device[did] = {"bins_sum": [0.0] * len(r["bins"]), "db_sum": 0.0, "count": 0}
+        by_device[did]["db_sum"] += r["db_level"]
+        by_device[did]["count"]  += 1
         for i, v in enumerate(r["bins"]):
-            avg_bins[i] += v
+            by_device[did]["bins_sum"][i] += v
 
-    avg_db  = round(avg_db / n, 2)
-    avg_bins = [round(v / n, 2) for v in avg_bins]
+    devices = []
+    for did, data in by_device.items():
+        n = data["count"]
+        devices.append({
+            "device_id": did,
+            "count":     n,
+            "avg_db":    round(data["db_sum"] / n, 2),
+            "avg_bins":  [round(v / n, 2) for v in data["bins_sum"]],
+        })
 
     return {
         "id":         session_id,
         "name":       session["name"],
         "start_time": session["start_time"].isoformat(),
         "end_time":   end_time.isoformat(),
-        "count":      n,
-        "avg_db":     avg_db,
-        "avg_bins":   avg_bins,
+        "devices":    devices,
     }
 
 
