@@ -10,6 +10,7 @@ from bson import ObjectId
 import datetime
 import os
 import pathlib
+import certifi
 
 FRONTEND_DIR = pathlib.Path(__file__).parent.parent / "frontend"
 
@@ -37,7 +38,7 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 # Database
 # ---------------------------------------------------------------------------
-client       = AsyncIOMotorClient(MONGO_URI)
+client       = AsyncIOMotorClient(MONGO_URI, tlsCAFile=certifi.where())
 db           = client[MONGO_DB]
 collection   = db["readings"]
 sessions_col = db["sessions"]
