@@ -223,7 +223,7 @@ body {
   <div id="readout">
     <span id="freq-read">— Hz</span>
     <span class="read-sep">/</span>
-    <span id="db-read">— dB SPL</span>
+    <span id="db-read">— dBFS</span>
   </div>
 </div>
 
@@ -273,9 +273,9 @@ const WS_URL    = (location.protocol === 'https:' ? 'wss' : 'ws') + '://' + loca
 function apiHeaders() { return {'Content-Type':'application/json','Authorization':`Bearer ${API_TOKEN}`}; }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-// Firmware sends dB SPL (adds MIC_OFFSET_DB=120 to dBFS), so range is 40–120 dB SPL
+// Firmware sends raw dBFS values; display range -80 (floor) to 0 (clip)
 const NUM_BANDS = 64, F_MIN = 20, F_MAX = 20000;
-const DB_DISPLAY_MIN = 40, DB_DISPLAY_MAX = 120, DB_DISPLAY_RANGE = DB_DISPLAY_MAX - DB_DISPLAY_MIN;
+const DB_DISPLAY_MIN = -80, DB_DISPLAY_MAX = 0, DB_DISPLAY_RANGE = DB_DISPLAY_MAX - DB_DISPLAY_MIN;
 const AVG_ALPHA = 0.12;
 
 const DEVICE_PALETTE = [
@@ -292,8 +292,8 @@ const freqToX       = (f, w) => (Math.log10(f / F_MIN) / Math.log10(F_MAX / F_MI
 const freqLabel     = f => f >= 1000 ? (f/1000|0)+'k' : Math.round(f).toString();
 const dbToY         = (db, h) => { const c = Math.max(DB_DISPLAY_MIN, Math.min(DB_DISPLAY_MAX, db)); return h * (1 - (c - DB_DISPLAY_MIN) / DB_DISPLAY_RANGE); };
 const FREQ_LABELS   = [20,50,100,200,500,1000,2000,5000,10000,20000];
-const DB_GRID       = [120,110,100,90,80,70,60,50,40];
-const DB_GRID_HI    = new Set([120,100,80,60,40]);
+const DB_GRID       = [0,-10,-20,-30,-40,-50,-60,-70,-80];
+const DB_GRID_HI    = new Set([0,-20,-40,-60,-80]);
 
 // ─── Canvas helpers ───────────────────────────────────────────────────────────
 function scaleCanvas(canvas, w, h) {
@@ -383,7 +383,7 @@ class DeviceView {
           </label>
         </div>
 
-        <span class="panel-db">— dB SPL</span>
+        <span class="panel-db">— dBFS</span>
       </div>
       <div class="panel-display">
         <canvas class="panel-rta"></canvas>
@@ -418,7 +418,7 @@ class DeviceView {
       if (this.hoverBand >= 0) {
         const f = bandCenterFreq(this.hoverBand);
         document.getElementById('freq-read').textContent = f < 1000 ? Math.round(f)+' Hz' : (f/1000).toFixed(1)+' kHz';
-        document.getElementById('db-read').textContent   = this.bins[this.hoverBand].toFixed(1)+' dB SPL';
+        document.getElementById('db-read').textContent   = this.bins[this.hoverBand].toFixed(1)+' dBFS';
       }
     });
     this.rtaCanvas.addEventListener('mouseleave', () => { this.hoverBand = -1; });
@@ -440,7 +440,7 @@ class DeviceView {
     this.dbLevel = Math.max(newDb, this.dbLevel - decay * 0.5);
     if (newDb >= this.meterPeak) { this.meterPeak = newDb; this.meterAge = 0; }
     else { this.meterAge++; if (this.meterAge > 80) this.meterPeak -= 0.5; }
-    this.el.querySelector('.panel-db').textContent = newDb.toFixed(1)+' dB SPL';
+    this.el.querySelector('.panel-db').textContent = newDb.toFixed(1)+' dBFS';
     this.el.querySelector('.panel-meter-db').textContent = this.dbLevel.toFixed(1);
   }
 
@@ -564,7 +564,7 @@ class DeviceView {
       const isPeak = this.cfg.peakHold && Math.abs(db - this.meterPeak) < (DB_DISPLAY_RANGE / numSegs) * 2;
       let color;
       if (isPeak)      color = '#f0a840';
-      else if (active) color = db > 114 ? '#e05060' : db > 102 ? '#e08840' : db > 84 ? this.color.dot : this.color.dot+'99';
+      else if (active) color = db > -6 ? '#e05060' : db > -18 ? '#e08840' : db > -36 ? this.color.dot : this.color.dot+'99';
       else             color = '#1e1e26';
       ctx.fillStyle = color; ctx.fillRect(0, i*segTotal, w, segH);
     }
@@ -721,7 +721,7 @@ async function loadSessionDevices(sessionId, container) {
       <canvas class="mini-spectrum" id="ms-${sessionId}-${i}"></canvas>
       <div class="device-stats">
         <div class="stat-item"><div class="stat-label">Readings</div><div class="stat-value">${dev.count}</div></div>
-        <div class="stat-item"><div class="stat-label">Avg dB</div><div class="stat-value">${dev.avg_db} dB SPL</div></div>
+        <div class="stat-item"><div class="stat-label">Avg dB</div><div class="stat-value">${dev.avg_db} dBFS</div></div>
         <div class="stat-item"><div class="stat-label">Peak band</div><div class="stat-value">${peakFreq}</div></div>
       </div>
     `;
@@ -794,7 +794,7 @@ function frame() {
   devices.forEach(v => v.draw());
   if (devices.size === 0) {
     document.getElementById('freq-read').textContent = '— Hz';
-    document.getElementById('db-read').textContent   = '— dB SPL';
+    document.getElementById('db-read').textContent   = '— dBFS';
   }
   updateFps();
   requestAnimationFrame(frame);

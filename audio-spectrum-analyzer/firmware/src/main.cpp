@@ -22,10 +22,6 @@ const char* DEVICE_ID  = "ESP32_STATION_01";
 #define FFT_SAMPLES   512
 #define NUM_BANDS     64
 
-// ---- ADDED: MIC SENSITIVITY CALIBRATION ----
-// INMP441 sensitivity: -26 dBFS @ 94 dB SPL (1 Pa)
-// So 0 dBFS = 94 + 26 = 120 dB SPL
-#define MIC_OFFSET_DB  120.0f   // dBFS → dB SPL offset
 
 double vReal[FFT_SAMPLES];
 double vImag[FFT_SAMPLES];
@@ -79,8 +75,7 @@ float compute_db() {
     }
     double rms = sqrt(sum / FFT_SAMPLES);
     if (rms < 1e-10) return -96.0f;
-    float dbfs = (float)(20.0 * log10(rms));
-    return dbfs + MIC_OFFSET_DB;  // convert dBFS → dB SPL
+    return (float)(20.0 * log10(rms));
 }
 
 void compute_bands(float bands[NUM_BANDS]) {
@@ -108,8 +103,7 @@ void compute_bands(float bands[NUM_BANDS]) {
         double avg = (cnt > 0) ? sum / cnt : 0.0;
         if (avg < 1e-10) avg = 1e-10;
 
-        // FIXED: normalize against FFT_SAMPLES (not FFT_SAMPLES/2) + SPL offset
-        bands[b] = (float)(20.0 * log10(avg / FFT_SAMPLES)) + MIC_OFFSET_DB;
+        bands[b] = (float)(20.0 * log10(avg / FFT_SAMPLES));
     }
 }
 
@@ -144,7 +138,7 @@ void post_data(float db_level, float bands[NUM_BANDS]) {
     http.addHeader("Authorization", String("Bearer ") + API_TOKEN);
 
     int code = http.POST(body);
-    Serial.printf("[POST] %d  dB=%.1f SPL\n", code, db_level);
+    Serial.printf("[POST] %d  dB=%.1f dBFS\n", code, db_level);
     http.end();
 }
 
@@ -194,7 +188,7 @@ void loop() {
     float bands[NUM_BANDS];
     compute_bands(bands);
 
-    Serial.printf("[Audio] dB=%.1f SPL  Band[0]=%.1f  Band[32]=%.1f  Band[63]=%.1f\n",
+    Serial.printf("[Audio] dB=%.1f dBFS  Band[0]=%.1f  Band[32]=%.1f  Band[63]=%.1f\n",
                   db_level, bands[0], bands[32], bands[63]);
 
     post_data(db_level, bands);
