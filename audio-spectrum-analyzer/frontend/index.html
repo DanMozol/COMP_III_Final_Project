@@ -223,7 +223,7 @@ body {
   <div id="readout">
     <span id="freq-read">— Hz</span>
     <span class="read-sep">/</span>
-    <span id="db-read">— dBFS</span>
+    <span id="db-read">— dB SPL</span>
   </div>
 </div>
 
@@ -273,9 +273,9 @@ const WS_URL    = (location.protocol === 'https:' ? 'wss' : 'ws') + '://' + loca
 function apiHeaders() { return {'Content-Type':'application/json','Authorization':`Bearer ${API_TOKEN}`}; }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-// Firmware sends raw dBFS values; display range -120 (floor) to 0 (clip)
+// Firmware sends calibrated dB SPL; spectrum bins are offset to SPL domain
 const NUM_BANDS = 64, F_MIN = 20, F_MAX = 20000;
-const DB_DISPLAY_MIN = -120, DB_DISPLAY_MAX = 0, DB_DISPLAY_RANGE = DB_DISPLAY_MAX - DB_DISPLAY_MIN;
+const DB_DISPLAY_MIN = 0, DB_DISPLAY_MAX = 120, DB_DISPLAY_RANGE = DB_DISPLAY_MAX - DB_DISPLAY_MIN;
 const AVG_ALPHA = 0.12;
 
 const DEVICE_PALETTE = [
@@ -292,8 +292,8 @@ const freqToX       = (f, w) => (Math.log10(f / F_MIN) / Math.log10(F_MAX / F_MI
 const freqLabel     = f => f >= 1000 ? (f/1000|0)+'k' : Math.round(f).toString();
 const dbToY         = (db, h) => { const c = Math.max(DB_DISPLAY_MIN, Math.min(DB_DISPLAY_MAX, db)); return h * (1 - (c - DB_DISPLAY_MIN) / DB_DISPLAY_RANGE); };
 const FREQ_LABELS   = [20,50,100,200,500,1000,2000,5000,10000,20000];
-const DB_GRID       = [0,-10,-20,-30,-40,-50,-60,-70,-80,-90,-100,-110,-120];
-const DB_GRID_HI    = new Set([0,-20,-40,-60,-80,-100,-120]);
+const DB_GRID       = [120,110,100,90,80,70,60,50,40,30,20,10,0];
+const DB_GRID_HI    = new Set([120,100,80,60,40,20,0]);
 
 // ─── Canvas helpers ───────────────────────────────────────────────────────────
 function scaleCanvas(canvas, w, h) {
@@ -418,7 +418,7 @@ class DeviceView {
       if (this.hoverBand >= 0) {
         const f = bandCenterFreq(this.hoverBand);
         document.getElementById('freq-read').textContent = f < 1000 ? Math.round(f)+' Hz' : (f/1000).toFixed(1)+' kHz';
-        document.getElementById('db-read').textContent   = this.bins[this.hoverBand].toFixed(1)+' dBFS';
+        document.getElementById('db-read').textContent   = this.bins[this.hoverBand].toFixed(1)+' dB SPL';
       }
     });
     this.rtaCanvas.addEventListener('mouseleave', () => { this.hoverBand = -1; });
@@ -429,18 +429,22 @@ class DeviceView {
     scaleCanvas(this.meterCanvas, this.meterCanvas.offsetWidth, this.meterCanvas.offsetHeight);
   }
 
-  applyBins(newBins, newDb) {
+  applyBins(newBins, newDb, rawDbLevel) {
+    // Shift bins from dBFS into the SPL domain so the spectrum aligns with the grid.
+    // offset ≈ 129 dB (the MIC_REF_AMPL constant baked into the firmware formula).
+    const offset = (rawDbLevel != null && newDb != null) ? newDb - rawDbLevel : 0;
     const decay = this.cfg.decay * 0.5;
     for (let b = 0; b < NUM_BANDS; b++) {
-      this.bins[b] = Math.max(newBins[b], this.bins[b] - decay);
-      this.avgs[b] = this.avgs[b] * (1 - AVG_ALPHA) + newBins[b] * AVG_ALPHA;
-      if (newBins[b] >= this.peaks[b]) { this.peaks[b] = newBins[b]; this.peakAge[b] = 0; }
+      const sb = newBins[b] + offset;
+      this.bins[b] = Math.max(sb, this.bins[b] - decay);
+      this.avgs[b] = this.avgs[b] * (1 - AVG_ALPHA) + sb * AVG_ALPHA;
+      if (sb >= this.peaks[b]) { this.peaks[b] = sb; this.peakAge[b] = 0; }
       else { this.peakAge[b]++; if (this.peakAge[b] > 60) this.peaks[b] -= 0.25; }
     }
     this.dbLevel = Math.max(newDb, this.dbLevel - decay * 0.5);
     if (newDb >= this.meterPeak) { this.meterPeak = newDb; this.meterAge = 0; }
     else { this.meterAge++; if (this.meterAge > 80) this.meterPeak -= 0.5; }
-    this.el.querySelector('.panel-db').textContent = newDb.toFixed(1)+' dBFS';
+    this.el.querySelector('.panel-db').textContent = newDb.toFixed(1)+' dB SPL';
     this.el.querySelector('.panel-meter-db').textContent = this.dbLevel.toFixed(1);
   }
 
@@ -540,7 +544,7 @@ class DeviceView {
 
       const freq  = bandCenterFreq(this.hoverBand);
       const fStr  = freq < 1000 ? Math.round(freq)+' Hz' : (freq/1000).toFixed(1)+' kHz';
-      const dbStr = db.toFixed(1)+' dB';
+      const dbStr = db.toFixed(1)+' dB SPL';
       const TAG_H = 28, TAG_GAP = 8;
       let tagTop = yCurve - TAG_GAP - TAG_H;
       if (tagTop < 2) tagTop = 2;
@@ -571,7 +575,7 @@ class DeviceView {
       const isPeak = this.cfg.peakHold && Math.abs(db - this.meterPeak) < (DB_DISPLAY_RANGE / numSegs) * 2;
       let color;
       if (isPeak)      color = '#f0a840';
-      else if (active) color = db > -6 ? '#e05060' : db > -18 ? '#e08840' : db > -36 ? this.color.dot : this.color.dot+'99';
+      else if (active) color = db > 110 ? '#e05060' : db > 90 ? '#e08840' : db > 70 ? this.color.dot : this.color.dot+'99';
       else             color = '#1e1e26';
       ctx.fillStyle = color; ctx.fillRect(0, i*segTotal, w, segH);
     }
@@ -633,7 +637,7 @@ function connectWS() {
   ws.onmessage = e => {
     try {
       const d = JSON.parse(e.data);
-      getOrCreate(d.device_id).applyBins(d.bins, d.db_level);
+      getOrCreate(d.device_id).applyBins(d.bins, d.spl, d.db_level);
     } catch {}
   };
   ws.onclose = ws.onerror = () => {
@@ -728,7 +732,7 @@ async function loadSessionDevices(sessionId, container) {
       <canvas class="mini-spectrum" id="ms-${sessionId}-${i}"></canvas>
       <div class="device-stats">
         <div class="stat-item"><div class="stat-label">Readings</div><div class="stat-value">${dev.count}</div></div>
-        <div class="stat-item"><div class="stat-label">Avg dB</div><div class="stat-value">${dev.avg_db} dBFS</div></div>
+        <div class="stat-item"><div class="stat-label">Avg dB</div><div class="stat-value">${dev.avg_db} dB SPL</div></div>
         <div class="stat-item"><div class="stat-label">Peak band</div><div class="stat-value">${peakFreq}</div></div>
       </div>
     `;
@@ -795,13 +799,13 @@ function updateFps() {
 // ─── Render loop ──────────────────────────────────────────────────────────────
 function frame() {
   if (!connected && devices.size > 0) {
-    const flat = new Float32Array(NUM_BANDS).fill(-60);
-    devices.forEach(v => v.applyBins(flat, -60));
+    const flat = new Float32Array(NUM_BANDS).fill(DB_DISPLAY_MIN);
+    devices.forEach(v => v.applyBins(flat, DB_DISPLAY_MIN, null));
   }
   devices.forEach(v => v.draw());
   if (devices.size === 0) {
     document.getElementById('freq-read').textContent = '— Hz';
-    document.getElementById('db-read').textContent   = '— dBFS';
+    document.getElementById('db-read').textContent   = '— dB SPL';
   }
   updateFps();
   requestAnimationFrame(frame);

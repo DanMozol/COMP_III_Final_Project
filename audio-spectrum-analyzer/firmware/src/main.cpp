@@ -25,11 +25,20 @@ static unsigned long last_post_ms = 0;
 #define FFT_SAMPLES   512
 #define NUM_BANDS     64
 
-#define MIC_OFFSET_DB    120.0f  // INMP441: -26 dBFS sensitivity + 94 dB SPL ref
-#define STARTUP_DELAY_MS 2000
-#define SMOOTH_ALPHA     0.3f
+#define MIC_SENSITIVITY    -26      // dBFS @ 94 dB SPL (INMP441 datasheet)
+#define MIC_REF_DB          94.0    // SPL reference point (1 Pa)
+#define MIC_OFFSET_DB       3.0103  // 20*log10(sqrt(2)) — peak-to-RMS correction
+#define MIC_BITS            24      // valid bits from INMP441
+#define MIC_OVERLOAD_DB    116.0    // INMP441 acoustic overload point
+#define MIC_NOISE_DB        29.0    // INMP441 noise floor
 
-static float smoothed_spl = 50.0f;
+// Reference amplitude in normalized domain (samples = raw_24bit / 2^24)
+constexpr double MIC_REF_AMPL = pow(10.0, (double)MIC_SENSITIVITY / 20.0) *
+                                 ((1 << (MIC_BITS - 1)) - 1) / (double)(1 << MIC_BITS);
+
+#define SMOOTH_ALPHA  0.3f
+
+static float smoothed_spl = 0.0f;  // seeded on first real reading
 
 double vReal[FFT_SAMPLES];
 double vImag[FFT_SAMPLES];
@@ -88,12 +97,23 @@ float compute_db(float &spl_out) {
     }
 
     float dbfs = (float)(20.0 * log10(rms));
-    float raw_spl = constrain(dbfs + MIC_OFFSET_DB, 20.0f, 130.0f);
+    float raw_spl = (float)(MIC_OFFSET_DB + MIC_REF_DB + 20.0 * log10(rms / MIC_REF_AMPL));
+    raw_spl = constrain(raw_spl, (float)MIC_NOISE_DB, (float)MIC_OVERLOAD_DB);
 
-    if (millis() > STARTUP_DELAY_MS) {
-        smoothed_spl = SMOOTH_ALPHA * raw_spl + (1.0f - SMOOTH_ALPHA) * smoothed_spl;
+    static bool initialized = false;
+    static int  skip_count  = 0;
+
+    if (!initialized) {
+        skip_count++;
+        if (skip_count >= 2) {      // discard first sample (mic transient), seed on second
+            smoothed_spl = raw_spl;
+            initialized  = true;
+        }
+        spl_out = raw_spl;
+        return dbfs;
     }
 
+    smoothed_spl = SMOOTH_ALPHA * raw_spl + (1.0f - SMOOTH_ALPHA) * smoothed_spl;
     spl_out = smoothed_spl;
     return dbfs;
 }
