@@ -13,6 +13,9 @@ const char* SERVER_URL = CONFIG_SERVER_URL;
 const char* API_TOKEN  = CONFIG_API_TOKEN;
 const char* DEVICE_ID  = "ESP32_STATION_01";
 
+static unsigned long last_post_ms = 0;
+#define POST_INTERVAL_MS 1000  // 1 Hz — Render free tier gets overwhelmed at 4 Hz TLS
+
 #define I2S_WS_PIN   25
 #define I2S_SCK_PIN  26
 #define I2S_SD_PIN   22
@@ -107,10 +110,11 @@ void compute_bands(float bands[NUM_BANDS]) {
     }
 }
 
-// ---------------------------------------------------------------------------
-// FIXED: uses WiFiClientSecure with setInsecure() for HTTPS to Render
-// ---------------------------------------------------------------------------
 void post_data(float db_level, float bands[NUM_BANDS]) {
+    unsigned long now = millis();
+    if (now - last_post_ms < POST_INTERVAL_MS) return;
+    last_post_ms = now;
+
     if (WiFi.status() != WL_CONNECTED) {
         Serial.println("[WiFi] Not connected — skipping POST");
         return;
@@ -128,18 +132,22 @@ void post_data(float db_level, float bands[NUM_BANDS]) {
     String body;
     serializeJson(doc, body);
 
-    WiFiClientSecure client;          // ← ADDED
-    client.setInsecure();             // ← skip cert check (fine for this project)
+    WiFiClientSecure client;
+    client.setInsecure();
+    client.setTimeout(12);  // TCP connect timeout in seconds for WiFiClientSecure
 
     HTTPClient http;
-    http.begin(client, SERVER_URL);   // ← pass client here
-    http.setTimeout(10000);           // ← 10s timeout so Render cold start doesn't crash it
+    http.begin(client, SERVER_URL);
+    http.setTimeout(10000);
     http.addHeader("Content-Type",  "application/json");
     http.addHeader("Authorization", String("Bearer ") + API_TOKEN);
 
     int code = http.POST(body);
     Serial.printf("[POST] %d  dB=%.1f dBFS\n", code, db_level);
+
     http.end();
+    client.stop();
+    delay(100);  // let mbedTLS fully release the socket before next iteration
 }
 
 void setup() {
@@ -159,19 +167,25 @@ void setup() {
 
 void wifi_reconnect() {
     if (WiFi.status() == WL_CONNECTED) return;
-    Serial.print("[WiFi] Reconnecting");
-    WiFi.disconnect();
+
+    Serial.println("[WiFi] Lost connection — full reset");
+    WiFi.disconnect(true);  // clears AP record from driver, releases stale TLS socket lock
+    delay(1000);
     WiFi.begin(WIFI_SSID, WIFI_PASS);
+
     int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+    while (WiFi.status() != WL_CONNECTED && attempts < 40) {
         delay(500);
         Serial.print(".");
         attempts++;
     }
+
     if (WiFi.status() == WL_CONNECTED) {
         Serial.println("\n[WiFi] Reconnected: " + WiFi.localIP().toString());
+        delay(3000);  // DNS resolver needs time after DHCP — logs show DNS failures without this
     } else {
-        Serial.println("\n[WiFi] Reconnect failed — will retry next cycle");
+        Serial.println("\n[WiFi] Still disconnected — will retry");
+        WiFi.disconnect(true);
     }
 }
 
@@ -193,5 +207,4 @@ void loop() {
 
     post_data(db_level, bands);
 
-    delay(250);
 }
