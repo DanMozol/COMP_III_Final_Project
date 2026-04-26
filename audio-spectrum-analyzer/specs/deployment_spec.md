@@ -84,11 +84,11 @@ If you created the service via **New → Web Service** instead, Render ignores `
 
 ### Update Firmware for Render
 
-After deployment, update `SERVER_URL` in `firmware/src/main.cpp`:
-```cpp
-const char* SERVER_URL = "https://your-service.onrender.com/data";
+After deployment, update `CONFIG_SERVER_URL` in `firmware/secrets.ini`:
+```ini
+-DCONFIG_SERVER_URL=\"https://your-service.onrender.com/data\"
 ```
-Reflash all boards.
+Then reflash all boards (`pio run --target upload`).
 
 ---
 

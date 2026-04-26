@@ -51,17 +51,19 @@ Time-series collections use columnar storage internally — much better query an
 {
   "device_id": "ESP32_STATION_01",
   "db_level":  -42.3,
+  "spl":       78.5,
   "bins": [-60.1, -58.4, -55.2, "...64 values total..."],
   "timestamp": "2025-04-13T14:00:01Z"
 }
 ```
 
-| Field       | Type            | Description                                |
-|-------------|-----------------|--------------------------------------------|
-| `device_id` | string          | Sensor identifier (metaField)              |
-| `db_level`  | float           | Overall room loudness in dBFS              |
-| `bins`      | array[64 float] | FFT energy per log-spaced band in dBFS     |
-| `timestamp` | datetime (UTC)  | When the reading was captured (timeField)  |
+| Field       | Type            | Description                                        |
+|-------------|-----------------|----------------------------------------------------|
+| `device_id` | string          | Sensor identifier (metaField)                      |
+| `db_level`  | float           | Raw dBFS level (RMS-based, negative value)         |
+| `spl`       | float           | Calibrated SPL in dB (positive, human-readable)    |
+| `bins`      | array[64 float] | FFT energy per log-spaced band in dBFS             |
+| `timestamp` | datetime (UTC)  | When the reading was captured (timeField)          |
 
 ### Indexes
 

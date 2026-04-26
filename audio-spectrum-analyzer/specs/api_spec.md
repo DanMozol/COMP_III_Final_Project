@@ -39,9 +39,17 @@ Ingest a single audio reading from an ESP32.
 {
   "device_id": "ESP32_STATION_01",
   "db_level": -42.3,
+  "spl": 78.5,
   "bins": [/* exactly 64 floats, dBFS per frequency band */]
 }
 ```
+
+| Field | Type | Description |
+|---|---|---|
+| `device_id` | string | Unique sensor identifier |
+| `db_level` | float | Raw dBFS level (RMS-based, negative) |
+| `spl` | float | Calibrated SPL in dB (positive, human-readable) |
+| `bins` | array[64 float] | FFT energy per log-spaced band in dBFS |
 
 **Response `200 OK`**
 ```json
@@ -188,6 +196,7 @@ wss://your-service.onrender.com/ws  # Render (must use wss://)
 {
   "device_id": "ESP32_STATION_01",
   "db_level": -42.3,
+  "spl": 78.5,
   "bins": [...],
   "timestamp": "2025-04-13T14:00:01.123456"
 }
