@@ -104,6 +104,7 @@ manager = ConnectionManager()
 class AudioReading(BaseModel):
     device_id: str
     db_level: float = Field(..., description="Overall dBFS level")
+    spl: float = Field(..., description="Calibrated SPL in dB")
     bins: list[float] = Field(..., min_length=64, max_length=64, description="64 FFT frequency bands")
 
 class SessionCreate(BaseModel):
@@ -127,6 +128,7 @@ async def post_data(reading: AudioReading, _: str = Depends(verify_token)):
     document = {
         "device_id": reading.device_id,
         "db_level":  reading.db_level,
+        "spl":       reading.spl,        # ← ADD
         "bins":      reading.bins,
         "timestamp": now,
     }
@@ -135,6 +137,7 @@ async def post_data(reading: AudioReading, _: str = Depends(verify_token)):
     payload = {
         "device_id": reading.device_id,
         "db_level":  reading.db_level,
+        "spl":       reading.spl,        # ← ADD
         "bins":      reading.bins,
         "timestamp": now.isoformat(),
     }
