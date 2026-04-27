@@ -185,9 +185,9 @@ async def get_stats(
         {"$match": match},
         {"$group": {
             "_id":    None,
-            "min_db": {"$min": "$db_level"},
-            "max_db": {"$max": "$db_level"},
-            "avg_db": {"$avg": "$db_level"},
+            "min_db": {"$min": "$spl"},
+            "max_db": {"$max": "$spl"},
+            "avg_db": {"$avg": "$spl"},
             "count":  {"$sum": 1},
         }},
     ]
@@ -262,7 +262,7 @@ async def session_average(session_id: str, _: str = Depends(verify_token)):
 
     cursor = collection.find(
         {"timestamp": {"$gte": session["start_time"], "$lte": end_time}},
-        {"bins": 1, "db_level": 1, "device_id": 1, "_id": 0}
+        {"bins": 1, "db_level": 1, "spl": 1, "device_id": 1, "_id": 0}
     )
     readings = await cursor.to_list(length=None)
 
@@ -279,7 +279,7 @@ async def session_average(session_id: str, _: str = Depends(verify_token)):
         did = r.get("device_id", "unknown")
         if did not in by_device:
             by_device[did] = {"bins_sum": [0.0] * len(r["bins"]), "db_sum": 0.0, "count": 0}
-        by_device[did]["db_sum"] += r["db_level"]
+        by_device[did]["db_sum"] += r.get("spl", r["db_level"])
         by_device[did]["count"]  += 1
         for i, v in enumerate(r["bins"]):
             by_device[did]["bins_sum"][i] += v
